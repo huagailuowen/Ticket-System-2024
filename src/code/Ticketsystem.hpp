@@ -1,0 +1,4 @@
+#ifndef TICKETSYSTEM_HPP
+#define TICKETSYSTEM_HPP
+
+#endif
