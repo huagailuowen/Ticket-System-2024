@@ -3,15 +3,14 @@
 #include <utility> // Include the <utility> header file
 
 namespace sjtu {
-
 template<class T1, class T2>
 class pair {
 public:
 	T1 first;
 	T2 second;
 	constexpr pair() : first(), second() {}
-	pair(const pair &other) = default;
-	pair(pair &&other) = default;
+	// pair(const pair &other) = default;
+	// pair(pair &&other) = default;
 	pair(const T1 &x, const T2 &y) : first(x), second(y) {}
 	template<class U1, class U2>
 	pair(U1 &&x, U2 &&y) : first(x), second(y) {}
@@ -19,11 +18,28 @@ public:
 	pair(const pair<U1, U2> &other) : first(other.first), second(other.second) {}
 	template<class U1, class U2>
 	pair(pair<U1, U2> &&other) : first(other.first), second(other.second) {}
+    bool operator<(const pair<T1, T2> &other) const {
+        return first < other.first||(first==other.first&&second<other.second);
+    }
+    bool operator>(const pair<T1, T2> &other) const {
+        return first > other.first||(first==other.first&&second>other.second);
+    }
+    bool operator<=(const pair<T1, T2> &other) const {
+        return first < other.first||(first==other.first&&second<=other.second);
+    }
+    bool operator>=(const pair<T1, T2> &other) const {
+        return first > other.first||(first==other.first&&second>=other.second);
+    }
+    bool operator==(const pair<T1, T2> &other) const {
+        return first == other.first && second == other.second;
+    }
+    bool operator!=(const pair<T1, T2> &other) const {
+        return first != other.first || second != other.second;
+    }
 };
-
 template <class T1, class T2>
-pair<T1, T2> make_pair(T1&& x, T2&& y) {
-	return pair<T1, T2>(std::forward<T1>(x), std::forward<T2>(y));
+sjtu::pair<T1, T2> make_pair(T1&& first, T2&& second) {
+    return pair<T1, T2>(std::forward<T1>(first), std::forward<T2>(second));
 }
 }
 
