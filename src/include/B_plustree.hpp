@@ -93,6 +93,7 @@ public:
     
     class config{
     public:
+        int size;
         int root;
         int datahead;
         int dataend;
@@ -102,6 +103,7 @@ public:
         int datacnt=0;
         int treecnt=0;
         config(){
+            size=0;
             root = 0;
             datahead = 0;
             dataend = 0;
@@ -153,6 +155,10 @@ public:
     sjtu::map<int,int>testm;
     #endif    
 public:
+    int size()const
+    {
+        return Config.size;
+    }
     #ifdef DEBUG
     void printconfig(){
         // config Config;
@@ -332,7 +338,7 @@ public:
         }
     }
     #endif
-    BPlusTree(std::string datafile,std::string treefile,bool isnew=false):datafile(datafile),treefile(treefile){
+    BPlusTree(std::string filename,bool isnew=false):datafile(filename+"_data"),treefile(filename+"_tree"){
         time_stamp=0;
         treepos.clear();
         datapos.clear();
@@ -656,7 +662,7 @@ public:
     };
 
 
-    bool search(const key_t &key, val_t &value) {
+    bool search(const key_t &key, val_t &value) const{
         // config Config;
         // getconfig(Config);
         // innerTreeNode *nw;
@@ -701,7 +707,39 @@ public:
         return false;
 
     }
-    void searchall(const key_t &lower_bound,const key_t upper_bound,sjtu::vector<val_t> &value)
+    bool modify(    const key_t &key,const val_t &value){
+        // config Config;
+        // getconfig(Config);
+        // innerTreeNode *nw;
+        // buffergettreefile(nw,Config.root);
+        innernode_ptr nw(Config.root,this);
+        while (!nw->isLeaf) {
+            int i = 0;
+            while (i < nw->num-1 && key > nw->keys[i]) {
+                i++;
+            }
+            nw.get(nw->children[i]);
+            // buffergettreefile(nw,nw->children[i]);
+        }
+        int i = 0;
+        while (i < nw->num-1 && key > nw->keys[i]) {
+            i++;
+        }
+        // dataNode *datanw;
+        // buffergetdatafile(datanw,nw->children[i]);
+        datanode_ptr datanw(nw->children[i],this);
+        int j = 0;
+        while (j < datanw->num && key > datanw->keys[j]) {
+            j++;
+        }
+        if(j<datanw->num&&key==datanw->keys[j]){
+            datanw->values[j]=value;
+            // buffersetdatafile(datanw,datanw->id);
+            return true;
+        }
+        return false;
+    }
+    void searchall(const key_t &lower_bound,const key_t upper_bound,sjtu::vector<val_t> &value)const
     {
         value.clear();
         // config Config;
@@ -754,6 +792,7 @@ public:
         // innerTreeNode* nw;
         // buffergettreefile(nw,Config.root);
         innernode_ptr nw(Config.root,this);
+        Config.size++;
         father[nw->id]=-1;
         // nw->print();
         while (!nw->isLeaf) {
@@ -919,6 +958,7 @@ public:
         // innerTreeNode* nw;
         // buffergettreefile(nw,Config.root);
         innernode_ptr nw(Config.root,this);
+        Config.size--;
         father[nw->id]=-1;
         while (!nw->isLeaf) {
             int i = 0;

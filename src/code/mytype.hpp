@@ -2,13 +2,18 @@
 #define MYTYPE
 #include "../include/fastinclude.hpp"
 #include "../include/Mystring.hpp"
-
 #include<string>
 using std::string;
 class AccountData;
 class BookData;
-#include "../include/Mystring.hpp" // Include the header file that defines the Mystring template class.
-
+class TrainSystemError{
+    string msg;
+public:
+    TrainSystemError(const std::string &s):msg(s){}
+    string what(){
+        return msg;
+    }
+};
 enum class quiry_type {
   All /*共有*/,
   User_type,

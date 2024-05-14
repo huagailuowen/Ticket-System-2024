@@ -6,6 +6,7 @@
 #include "mytype.hpp"
 #include "../include/B_plustree.hpp"
 const int MAXSTATIONNUM = 100;
+static const int BPlusTreeM=4, BPlusTreeL=4;
 class Train {
 protected:
 #ifdef DEBUG
@@ -77,7 +78,15 @@ public:
     void setSeat(int i, int seat) { this->seat[i] = seat; }
 };
 class Trainsystem {
-    sjtu::BPlusTree<TrainID_type, Train,4,4>released_train,unreleased_train;
+    sjtu::BPlusTree<TrainID_type, Train,  BPlusTreeM,BPlusTreeL>released_train,unreleased_train;
+    sjtu::BPlusTree<Stationname_type, TrainID_type, BPlusTreeM,BPlusTreeL>  station_train;
+public:
+    Trainsystem ()=delete;
+    Trainsystem(const Trainsystem &trainsystem)=delete;
+    Trainsystem &operator=(const Trainsystem &trainsystem)=delete;
+    Trainsystem(std::string name,bool isnew=false):released_train(name+"released_train",isnew),unreleased_train(name+"unreleased_train",isnew),station_train(name+"station_train",isnew){
+        
+    }
 };
 
 #endif // TRAINSYSTEM_HPP

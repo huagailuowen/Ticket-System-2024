@@ -1,7 +1,8 @@
 #ifndef USERSYSTEM_HPP
 #define USERSYSTEM_HPP
-#include "easyinclude.hpp"
+// #include "easyinclude.hpp"
 #include "mytype.hpp"
+const int userBPlusTreeM=4, userBPlusTreeL=4;
 class User {
 private:
 #ifdef DEBUG
@@ -35,7 +36,22 @@ public:
   bool operator>=(const User &rhs) const { return !(*this < rhs); }  
 };
 
-class Usersystem {};
+class Usersystem {
+  sjtu::BPlusTree<UserName_type,User,userBPlusTreeM,userBPlusTreeL>UserInfo;
+  
+public:
+  Usersystem() = delete;
+  Usersystem(const Usersystem &usersystem) = delete;
+  Usersystem &operator=(const Usersystem &usersystem) = delete;
+  Usersystem(std::string name,bool isnew=false):UserInfo(name+"UserInfo",isnew){}
+  int user_num() const { return UserInfo.size(); }
+  bool find_user(const UserName_type &username,User &user) const { 
+    bool res=UserInfo.search(username,user);
+    return res; 
+  } 
+  void add_user(User &user) { UserInfo.insert(user.getUserName(),user); }
+  void modify_user(const UserName_type &username,User &user) { UserInfo.modify(username,user); }
+};
 // Your code goes here
 
 #endif // USERSYSTEM_HPP

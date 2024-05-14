@@ -5,16 +5,34 @@
 #include "mytype.hpp"
 #include <cstdlib>
 #include <istream>
+#include <string>
+#include<iostream>
+// #include<sstream>
+
 // Your code goes here
 struct Command {
     int timestamp;
   command_type type;
-  int parameterNum;
+  int auguementNum;
   sjtu::vector<char> key;
-    sjtu::vector<std::string> parameter;
+    sjtu::vector<std::string> auguement;
     Command() = default;
-    Command(int timestamp, command_type type, int parameterNum, const sjtu::vector<char> &key, const sjtu::vector<std::string> &parameter)
-        : timestamp(timestamp), type(type), parameterNum(parameterNum), key(key), parameter(parameter) {}
+    Command(int timestamp, command_type type, int auguementNum, const sjtu::vector<char> &key, const sjtu::vector<std::string> &auguement)
+        : timestamp(timestamp), type(type), auguementNum(auguementNum), key(key), auguement(auguement) {}
+    Command(const Command &command) = default;
+    Command &operator=(const Command &command) = default;
+    Command &operator=(Command &&command){
+        if(this==&command)
+            return *this;
+        timestamp=command.timestamp;
+        type=command.type;
+        auguementNum=command.auguementNum;
+        key=std::move(command.key);
+        auguement=std::move(command.auguement);
+        return *this;
+    }
+    
+    Command(const std::string &s);
 
 };
 command_type string_to_command_type(const std::string &s) {
@@ -72,15 +90,61 @@ std::istream &operator>>(std::istream &iss, Command &command) {
 
         std::string argument;
         iss >> argument; // Read the argument
-        command.parameter.push_back(argument); // Add the argument to the vector
+        command.auguement.push_back(argument); // Add the argument to the vector
     }
 
-    command.parameterNum = command.parameter.size(); // Set the parameterNum
+    command.auguementNum = command.auguement.size(); // Set the auguementNum
 
     return iss;
 }
+Command::Command(const std::string &s) {
+    std::string::size_type pos = 0;
+    std::string timestamp;
+    pos = s.find(' ');
+    timestamp = s.substr(0, pos);
+    this->timestamp = std::stoi(timestamp.substr(1, timestamp.size() - 2)); // Read the timestamp
+    std::string cmd;
+    pos = s.find(' ', pos + 1);
+    cmd = s.substr(pos + 1, s.find(' ', pos + 1) - pos - 1); // Read the command type
+    this->type = string_to_command_type(cmd); // Convert the command type to an enum
+    std::string key;
+    while (pos != std::string::npos) {
+        pos = s.find(' ', pos + 1);
+        if (pos == std::string::npos) {
+            break;
+        }
+        key = s.substr(pos + 1, 1);
+        if (key[0] != '-') {
+            break; // Stop reading if the key is not preceded by '-'
+        }
+        this->key.push_back(key[0]); // Add the key to the vector
+        std::string argument;
+        pos = s.find(' ', pos + 1);
+        if (pos == std::string::npos) {
+            argument = s.substr(pos + 1);
+        } else {
+            argument = s.substr(pos + 1, s.find(' ', pos + 1) - pos - 1); // Read the argument
+        }
+        this->auguement.push_back(argument); // Add the argument to the vector
+    }
 
-
+    this->auguementNum = this->auguement.size(); // Set the auguementNum
+}
+class Commandsystem {
+    sjtu::vector<Command> commandList;
+public:
+    Commandsystem() = default;
+    void readcommand(Command& command)
+    {
+        std::cin>>command;
+        return;
+    }
+    void getcommand(Command& command,const std::string &s)
+    {
+        command=std::move(Command(s));
+        return;
+    }
+};
 
 
 #endif // COMMANDSYSTEM_HPP
