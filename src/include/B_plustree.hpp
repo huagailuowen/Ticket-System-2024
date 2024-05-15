@@ -17,7 +17,20 @@
 // #define DEBUG
 namespace sjtu{
 
-
+template<class T>
+int mylowerbound(T *a,int n,const T &x){
+    int l=0,r=n-1,res=n;
+    while(l<=r){
+        int mid=(l+r)>>1;
+        if(a[mid]>=x){
+            res=mid;
+            r=mid-1;
+        }else{
+            l=mid+1;
+        }
+    }
+    return res;
+}
 template <class key_t,class val_t,int M,int L>
 class BPlusTree {
 #ifdef DEBUG
@@ -671,9 +684,10 @@ public:
         int depth=0;
         while (!nw->isLeaf) {
             int i = 0;
-            while (i < nw->num-1 && key > nw->keys[i]) {
-                i++;
-            }
+            // while (i < nw->num-1 && key > nw->keys[i]) {
+            //     i++;
+            // }
+            i=mylowerbound( nw->keys,nw->num-1,key);;
             nw.get(nw->children[i]);
             // buffergettreefile(nw,nw->children[i]);
             depth++;
@@ -687,9 +701,10 @@ public:
             // }
         }
         int i = 0;
-        while (i < nw->num-1 && key > nw->keys[i]) {
-            i++;
-        }
+        // while (i < nw->num-1 && key > nw->keys[i]) {
+        //     i++;
+        // }
+        i=mylowerbound(nw->keys,nw->num-1,key);
         depth++;
         // std::cout<<"depth: "<<depth<<std::endl;
         // dataNode *datanw;
@@ -697,9 +712,10 @@ public:
         datanode_ptr datanw(nw->children[i],this);
 
         int j = 0;
-        while (j < datanw->num && key > datanw->keys[j]) {
-            j++;
-        }
+        // while (j < datanw->num && key > datanw->keys[j]) {
+        //     j++;
+        // }
+        j=mylowerbound(datanw->keys,datanw->num,key);
         if(j<datanw->num&&key==datanw->keys[j]){
             value = datanw->values[j];
             return true;
@@ -715,9 +731,10 @@ public:
         innernode_ptr nw(Config.root,this);
         while (!nw->isLeaf) {
             int i = 0;
-            while (i < nw->num-1 && key > nw->keys[i]) {
-                i++;
-            }
+            // while (i < nw->num-1 && key > nw->keys[i]) {
+            //     i++;
+            // }
+            i=mylowerbound(nw->keys,nw->num-1,key);
             nw.get(nw->children[i]);
             // buffergettreefile(nw,nw->children[i]);
         }
@@ -729,9 +746,10 @@ public:
         // buffergetdatafile(datanw,nw->children[i]);
         datanode_ptr datanw(nw->children[i],this);
         int j = 0;
-        while (j < datanw->num && key > datanw->keys[j]) {
-            j++;
-        }
+        // while (j < datanw->num && key > datanw->keys[j]) {
+        //     j++;
+        // }
+        j=mylowerbound(datanw->keys,datanw->num,key);
         if(j<datanw->num&&key==datanw->keys[j]){
             datanw->values[j]=value;
             // buffersetdatafile(datanw,datanw->id);
@@ -750,22 +768,26 @@ public:
 
         while (!nw->isLeaf) {
             int i = 0;
-            while (i < nw->num-1 && lower_bound > nw->keys[i]) {
-                i++;
-            }
-            buffergettreefile(nw,nw->children[i]);
+            // while (i < nw->num-1 && lower_bound > nw->keys[i]) {
+            //     i++;
+            // }
+            i=mylowerbound(nw->keys,nw->num-1,lower_bound);
+            nw.get(nw->children[i]);
+            // buffergettreefile(nw,nw->children[i]);
         }
         int i = 0;
-        while (i < nw->num-1 && lower_bound > nw->keys[i]) {
-            i++;
-        }
+        // while (i < nw->num-1 && lower_bound > nw->keys[i]) {
+        //     i++;
+        // }
+        i=mylowerbound(nw->keys,nw->num-1,lower_bound);
         // dataNode* datanw;
         // buffergetdatafile(datanw,nw->children[i]);
         datanode_ptr datanw(nw->children[i],this);
         int j = 0;
-        while (j < datanw->num && lower_bound > datanw->keys[j]) {
-            j++;
-        }
+        // while (j < datanw->num && lower_bound > datanw->keys[j]) {
+        //     j++;
+        // }
+        j=mylowerbound(datanw->keys,datanw->num,lower_bound);
         while(datanw->id!=Config.dataend){
             for(int k=j;k<datanw->num;k++){
                 if(datanw->keys[k]>upper_bound){
@@ -786,7 +808,7 @@ public:
         }
     }
     // 插入关键字
-    void insert(const key_t &key,const val_t &value) {
+    bool insert(const key_t &key,const val_t &value) {
         // config Config;
         // getconfig(Config);
         // innerTreeNode* nw;
@@ -797,25 +819,31 @@ public:
         // nw->print();
         while (!nw->isLeaf) {
             int i = 0;
-            while (i < nw->num-1 && key > nw->keys[i]) {
-                i++;
-            }
+            // while (i < nw->num-1 && key > nw->keys[i]) {
+            //     i++;
+            // }
+            i=mylowerbound(nw->keys,nw->num-1,key);
             father[nw->children[i]]=nw->id;
             nw.get(nw->children[i]);
             // buffergettreefile(nw,nw->children[i]);
         }
         int i = 0;
-        while (i < nw->num-1 && key > nw->keys[i]) {
-            i++;
-        }
+        // while (i < nw->num-1 && key > nw->keys[i]) {
+        //     i++;
+        // }
+        i=mylowerbound(nw->keys,nw->num-1,key);
         int place=nw->children[i];
         // dataNode* datanw;
         // buffergetdatafile(datanw,nw->children[i]);
         datanode_ptr datanw(nw->children[i],this);
         
         int j = 0;
-        while (j < datanw->num && key > datanw->keys[j]) {
-            j++;
+        // while (j < datanw->num && key > datanw->keys[j]) {
+        //     j++;
+        // }
+        j=mylowerbound(datanw->keys,datanw->num,key);
+        if(j<datanw->num&&key==datanw->keys[j]){
+            return false;
         }
         
         for(int k=datanw->num;k>j;k--){
@@ -827,7 +855,7 @@ public:
         datanw->num++;
         if(datanw->num<=L){
             // buffersetdatafile(datanw,datanw->id);
-            return;
+            return true;
         }
         // std::cerr<<"{{{{{}}}}}";
         // dataNode* newdatanw;
@@ -947,11 +975,12 @@ public:
             splitkey=nw->keys[((M+1)>>1)-1];
             nw=parent;//位置要对
         }
+        return true;
         // setconfig(Config);
     }
 
     // 删除关键字
-    void remove(const key_t &key) {
+    bool remove(const key_t &key) {
         
         // config Config;
         // getconfig(Config);
@@ -962,27 +991,30 @@ public:
         father[nw->id]=-1;
         while (!nw->isLeaf) {
             int i = 0;
-            while (i < nw->num-1 && key > nw->keys[i]) {
-                i++;
-            }
+            // while (i < nw->num-1 && key > nw->keys[i]) {
+            //     i++;
+            // }
+            i=mylowerbound(nw->keys,nw->num-1,key);
             father[nw->children[i]]=nw->id;
             nw.get(nw->children[i]);
             // buffergettreefile(nw,nw->children[i]);
         }
         int i = 0;
-        while (i < nw->num-1 && key > nw->keys[i]) {
-            i++;
-        }
+        // while (i < nw->num-1 && key > nw->keys[i]) {
+        //     i++;
+        // }
+        i=mylowerbound(nw->keys,nw->num-1,key);
         // dataNode* datanw;
         // buffergetdatafile(datanw,nw->children[i]);
         datanode_ptr datanw(nw->children[i],this);
         
         int j = 0;
-        while (j < datanw->num && key > datanw->keys[j]) {
-            j++;
-        }
+        // while (j < datanw->num && key > datanw->keys[j]) {
+        //     j++;
+        // }
+        j=mylowerbound(datanw->keys,datanw->num,key);
         if(j>=datanw->num||key!=datanw->keys[j]){
-            return;
+            return false;
         }
         for(int k=j;k<datanw->num-1;k++){
             datanw->keys[k]=datanw->keys[k+1];
@@ -991,7 +1023,7 @@ public:
         datanw->num--;
         if(datanw->num>=(L>>1)){
             // buffersetdatafile(datanw,datanw->id);
-            return;
+            return true;
         }
         //借用节点
         int place=i;
@@ -1014,7 +1046,7 @@ public:
                 // buffersetdatafile(prevdatanw,prevdatanw->id);
                 nw->keys[place-1]=prevdatanw->keys[prevdatanw->num-1];
                 // buffersettreefile(nw,nw->id);
-                return;
+                return true;
             }
         }
         if(place<nw->num-1){
@@ -1036,7 +1068,7 @@ public:
                 // buffersetdatafile(nextdatanw,nextdatanw->id);
                 nw->keys[place]=datanw->keys[datanw->num-1];
                 // buffersettreefile(nw,nw->id);
-                return;
+                return true;
             }
         }
         
@@ -1092,7 +1124,7 @@ public:
             //不可能(除非删光了)
             // buffersetdatafile(datanw, datanw->id);
             // setconfig(Config);
-            return;
+            return true;
         }
         
         while(true){
@@ -1196,8 +1228,42 @@ public:
                 break;
             }
         }
-
+        return true;
         // setconfig(Config);
+    }
+    void clear()
+    {
+        time_stamp=0;
+        treepos.clear();
+        datapos.clear();
+        while(treebufferqueue.size())treebufferqueue.pop();
+        while(databufferqueue.size())databufferqueue.pop();  
+        while(treevacantqueue.size())treevacantqueue.pop();
+        while(datavacantqueue.size())datavacantqueue.pop();
+        for(int i=0;i<buffersize;i++){
+            treevacantqueue.push(sjtu::make_pair(0,i));
+            datavacantqueue.push(sjtu::make_pair(0,i));
+        }      
+        for(int i=0;i<buffersize;i++){
+            treebuffer[i].id=-1;
+            databuffer[i].id=-1;
+        }
+        Config=config();
+        // setconfig(Config);
+        file.open(treefile, std::ios::out);
+        file.write(reinterpret_cast<char *>(&Config), sizeof(config));
+        innerTreeNode headtreenode(true);
+        headtreenode.num=1;
+        headtreenode.children[0]=0;
+        file.write(reinterpret_cast<char *>(&headtreenode), sizeof(innerTreeNode));
+        file.close();
+
+
+        file.open(datafile, std::ios::out);
+        dataNode headdatanode;
+        headdatanode.num=0;
+        file.write(reinterpret_cast<char *>(&headdatanode), sizeof(dataNode));
+        file.close();
     }
 
     
