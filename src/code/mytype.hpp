@@ -100,7 +100,7 @@ std::string int_to_time(int time) {
 }
 struct Mydate {
   int day, time;
-  Mydate() {}
+  Mydate() {day=0;time=0;}
   Mydate(int d, int t) {
     day = d + t / 1440;
     time = t % 1440;
@@ -114,7 +114,8 @@ struct Mydate {
   Mydate operator+(const Mydate &a) {
     return Mydate(day + a.day, time + a.time);
   }
-  operator std::string() { return int_to_Date(day) + " " + int_to_time(time); }
+  operator std::string() const { return int_to_Date(day) + " " + int_to_time(time); }
+  operator int () const { return day * 1440 + time; }
 };
 std::ostream &operator<<(std::ostream &os, const Mydate &a) {
   os << int_to_Date(a.day) << " " << int_to_time(a.time);
@@ -153,6 +154,28 @@ void splittoi(const std::string &str, T *res, const char &token,
     }
   }
   res[cnt++] = T(str.substr(last, len - last));
+}
+template <typename T,typename CMP>
+void quickSort(sjtu::vector<T>& arr, int low, int high) {
+  if (low < high) {
+    int pivotIndex = partition<T,CMP>(arr, low, high);
+    quickSort(arr, low, pivotIndex - 1);
+    quickSort(arr, pivotIndex + 1, high);
+  }
+}
+
+template <typename T,typename CMP>
+int partition(sjtu::vector<T>& arr, int low, int high) {
+  T pivot = arr[high];
+  int i = low - 1;
+  for (int j = low; j < high; j++) {
+    if (CMP(arr[j], pivot)) {
+      i++;
+      std::swap(arr[i], arr[j]);
+    }
+  }
+  std::swap(arr[i + 1], arr[high]);
+  return i + 1;
 }
 
 #endif

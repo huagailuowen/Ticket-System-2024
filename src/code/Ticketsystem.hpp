@@ -41,6 +41,7 @@ public:
         trainsystem.find_train(trainID,train,1);
         ReleasedTrain releasedTrain_tmp;
         releasedTrain_tmp.setTrainID(trainID);
+        Mydate curdate;
         for(int i=0;i<train.getStationNum()-1;i++){
             //there must minus one because the last station is the terminal station
             releasedTrain_tmp.setSeat(i,train.getSeatNum());
@@ -59,12 +60,45 @@ public:
         res=released_train_info.search(sjtu::make_pair(trainID,date),released_train);
         return res;
     }
+    bool query_train(const TrainID_type &trainID,Train& train) const{
+        return trainsystem.find_train(trainID,train);
+    }
     void clear()
     {
         trainsystem.clear();
         released_train_info.clear();
         UserTicket.clear();
         ticket_queue.clear();
+    }
+    void getalltrain_bystation(const Stationname_type &station,sjtu::vector<Train> &trains) const{
+        trainsystem.getalltrain_bystation(station,trains);
+    }
+    //根据寻址连续性，这种方式实际上是比较快的，因为选中的trainid也是升序排列的？
+    //但是还有更快的方法？，就是在station中直接放releasedtrain，这样就不用再次查询了
+    //这两种方法哪个更快？？
+    //我先写第一种吧
+    void getalltrain_bystation_time(const Stationname_type &station,const int &date,sjtu::vector<sjtu::pair<Train,ReleasedTrain>> &trains) const{
+        sjtu::vector<Train> possible_train;
+        trains.clear();
+        getalltrain_bystation(station,possible_train);
+        for(auto &i:possible_train){
+            //&加速
+            //可以不用get函数调用来加速
+            ReleasedTrain released_train;
+            int station_index=0;
+            for(int j=0;j<i.getStationNum();j++){
+                if(station==i.getStation(j)){
+                    station_index=j;
+                    break;
+                }
+            }
+            if(station_index+1==i.getStationNum()) continue;
+            //不走终点站
+            int takedays=(i.getleavetime(station_index)+Mydate(0,i.getStartTime())).day;
+            if(released_train_info.search(sjtu::make_pair(i.getTrainID(),date-takedays),released_train)){
+                trains.push_back(sjtu::make_pair(i,released_train));
+            }
+        }
     }
 
 };

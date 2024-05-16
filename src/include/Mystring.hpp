@@ -45,6 +45,18 @@ public:
       s += char(127);
     return s;
   }
+  static Mystring<len>setmin(){
+    Mystring<len>tmp;
+    for(int i=0;i<len;i++)
+      tmp[i]=0;
+    return tmp;
+  }
+  static Mystring<len>setmax(){
+    Mystring<len>tmp;
+    for(int i=0;i<len;i++)
+      tmp[i]=127;
+    return tmp;
+  }
 };
 template <const int len> Mystring<len>::Mystring() {
   c[0] = '\0';

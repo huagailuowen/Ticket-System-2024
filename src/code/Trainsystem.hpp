@@ -2,7 +2,7 @@
 #define TRAINSYSTEM_HPP
 
 // Your code goes here
-#include "easyinclude.hpp"
+// #include "easyinclude.hpp"
 #include "mytype.hpp"
 #include "../include/B_plustree.hpp"
 const int MAXSTATIONNUM = 100;
@@ -20,6 +20,7 @@ public:
     int startTime;
     int travelTime[MAXSTATIONNUM];
     int stopoverTime[MAXSTATIONNUM];
+    Mydate arrivetime[MAXSTATIONNUM];
     int saleDate[2];
     char type;
 public:
@@ -55,6 +56,26 @@ public:
     void setStopoverTime(int i, int stopoverTime) { this->stopoverTime[i] = stopoverTime; }
     void setSaleDate(int i, int saleDate) { this->saleDate[i] = saleDate; }
     void setType(char type) { this->type = type; }
+    void setarrivetime(int i, Mydate arrivetime) { this->arrivetime[i] = arrivetime; }
+    Mydate getarrivetime(int i) const { return this->arrivetime[i]; }
+    void updatearrivetime()
+    {
+        Mydate tmp = Mydate(0,startTime);
+        for (int i = 0; i < stationNum; i++)
+        {
+            arrivetime[i] = tmp;
+            if(i+1<stationNum)tmp = tmp + Mydate(0,travelTime[i]);
+            if (i!=0&&i+1< stationNum )
+                tmp = tmp + Mydate(0,stopoverTime[i-1]);
+        }
+    }
+    Mydate getleavetime(int i) const
+    {
+        if(i>=stationNum)throw "error";
+        Mydate tmp = arrivetime[i];
+        if(i!=0)tmp = tmp + Mydate(0,stopoverTime[i-1]);
+        return tmp;
+    }
     void setStation(const std::string &input)
     {
         splittos(input, station, '|');
@@ -100,7 +121,7 @@ public:
 };
 class Trainsystem {
     sjtu::BPlusTree<TrainID_type, Train,  BPlusTreeM,BPlusTreeL>released_train,unreleased_train;
-    sjtu::BPlusTree<sjtu::pair<Stationname_type, TrainID_type>, TrainID_type, BPlusTreeM,BPlusTreeL>  station_train;
+    sjtu::BPlusTree<sjtu::pair<Stationname_type, TrainID_type>, Train, BPlusTreeM,BPlusTreeL>  station_train;
 public:
     Trainsystem ()=delete;
     Trainsystem(const Trainsystem &trainsystem)=delete;
@@ -120,9 +141,7 @@ public:
         Train tmp;
         if(released_train.search(train.getTrainID(),tmp)||unreleased_train.search(train.getTrainID(),tmp)) return false;
         unreleased_train.insert(train.getTrainID(),train);
-        for(int i=0;i<train.getStationNum();i++){
-            station_train.insert(sjtu::make_pair(train.getStation(i),train.getTrainID()),train.getTrainID());
-        }
+        
         return true;
     }
     bool delete_train(const TrainID_type &trainID) { 
@@ -130,14 +149,14 @@ public:
         if(released_train.search(trainID,train)) return false;
         bool res=unreleased_train.remove(trainID);
         if(res==false) return false;
-        for(int i=0;i<train.getStationNum();i++){
-            station_train.remove(sjtu::make_pair(train.getStation(i),train.getTrainID()));
-        }
         return true;
     }
     bool release_train(const TrainID_type &trainID) { 
         Train train;
         if(!unreleased_train.search(trainID,train)) return false;
+        for(int i=0;i<train.getStationNum();i++){
+            station_train.insert(sjtu::make_pair(train.getStation(i),train.getTrainID()),train);
+        }
         unreleased_train.remove(trainID);
         released_train.insert(trainID,train);
         return true;
@@ -147,6 +166,10 @@ public:
         released_train.clear();
         unreleased_train.clear();
         station_train.clear();
+    }
+    void getalltrain_bystation(const Stationname_type &station,sjtu::vector<Train> &trains) const{
+        trains.clear();
+        station_train.searchall(sjtu::make_pair(station,TrainID_type::setmin()),sjtu::make_pair(station,TrainID_type::setmax()),trains);
     }
 };
 
