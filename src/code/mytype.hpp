@@ -109,11 +109,16 @@ struct Mydate {
       day--;
     }
   }
+  Mydate(const Mydate& a):day(a.day),time(a.time){}
   Mydate(const std::string &date, const std::string &time)
       : day(Date_to_int(date)), time(time_to_int(time)) {}
   Mydate operator+(const Mydate &a) {
     return Mydate(day + a.day, time + a.time);
   }
+  Mydate operator-(const Mydate &a) {
+    return Mydate(day - a.day, time - a.time);
+  }
+  static Mydate max() { return Mydate(100000, 0); }
   operator std::string() const { return int_to_Date(day) + " " + int_to_time(time); }
   operator int () const { return day * 1440 + time; }
 };
@@ -134,8 +139,8 @@ void splittos(const std::string &str, T *res, const char &token) {
   }
   res[cnt++] = T(str.substr(last, len - last));
 }
-template <class T>
-void splittoi(const std::string &str, T *res, const char &token,
+// template <class T>
+void splittoi(const std::string &str, int *res, const char &token,
               int isdate_time = 0)
 // isdate_time=0 means int,1 means date,2 means time
 {
@@ -149,11 +154,13 @@ void splittoi(const std::string &str, T *res, const char &token,
       else if (isdate_time == 2)
         res[cnt++] = time_to_int(str.substr(last, i - last));
       else
-        res[cnt++] = T(str.substr(last, i - last));
+        // res[cnt++] = T(str.substr(last, i - last));
+        sscanf(str.substr(last, i - last).c_str(), "%d", &res[cnt++]);
       last = i + 1;
     }
   }
-  res[cnt++] = T(str.substr(last, len - last));
+  // res[cnt++] = T(str.substr(last, len - last));
+  sscanf(str.substr(last, len - last).c_str(), "%d", &res[cnt++]);
 }
 template <typename T,typename CMP>
 void quickSort(sjtu::vector<T>& arr, int low, int high) {

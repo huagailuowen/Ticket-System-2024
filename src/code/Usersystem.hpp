@@ -49,12 +49,15 @@ public:
     bool res=UserInfo.search(username,user);
     return res; 
   } 
-  void add_user(User &user) { UserInfo.insert(user.getUserName(),user); }
+  void add_user(User &user) { 
+    UserInfo.insert(user.getUserName(),user); 
+  }
   void modify_user(const UserName_type &username,User &user) { UserInfo.modify(username,user); }
   void clear()
   {
     UserInfo.clear();
   }
+  
 };
 // Your code goes here
 

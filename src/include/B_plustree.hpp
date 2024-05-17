@@ -723,6 +723,44 @@ public:
         return false;
 
     }
+    bool lower_bound(   const key_t &key,val_t &value)const{
+        // config Config;
+        // getconfig(Config);
+        // innerTreeNode *nw;
+        // buffergettreefile(nw,Config.root);
+        innernode_ptr nw(Config.root,this);
+        while (!nw->isLeaf) {
+            int i = 0;
+            // while (i < nw->num-1 && key > nw->keys[i]) {
+            //     i++;
+            // }
+            i=mylowerbound(nw->keys,nw->num-1,key);
+            nw.get(nw->children[i]);
+            // buffergettreefile(nw,nw->children[i]);
+        }
+        int i = 0;
+        while (i < nw->num-1 && key > nw->keys[i]) {
+            i++;
+        }
+        // dataNode *datanw;
+        // buffergetdatafile(datanw,nw->children[i]);
+        datanode_ptr datanw(nw->children[i],this);
+        int j = 0;
+        while (j < datanw->num && key > datanw->keys[j]) {
+            j++;
+        }
+        if(j<datanw->num){
+            value = datanw->values[j];
+            return true;
+        }
+        if(datanw->next==Config.dataend){
+            return false;
+        }
+        datanw.get(datanw->next);
+        assert(datanw->num>0);
+        value=datanw->values[0];
+        return true;
+    }
     bool modify(    const key_t &key,const val_t &value){
         // config Config;
         // getconfig(Config);

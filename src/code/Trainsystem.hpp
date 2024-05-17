@@ -103,21 +103,28 @@ public:
 #endif
     TrainID_type trainID;
     int Date;
+    int stationNum;
     int seat[MAXSTATIONNUM];
 public:
     ReleasedTrain() = default;
-    ReleasedTrain(const TrainID_type &trainID, int Date, const int *seat)
-        : trainID(trainID), Date(Date) {
-        for (int i = 0; i < MAXSTATIONNUM; i++) {
+    ReleasedTrain(const TrainID_type &trainID, int Date, int stationNum, const int *seat)
+        : trainID(trainID), Date(Date), stationNum(stationNum) {
+        for (int i = 0; i < stationNum; i++) {
             this->seat[i] = seat[i];
         }
     }
     TrainID_type getTrainID() const { return trainID; }
     int getDate() const { return Date; }
     int getSeat(int i) const { return seat[i]; }
+    int getStationNum() const { return stationNum; }
+    TrainID_type& getTrainID() { return trainID; }
+    int& getDate() { return Date; }
+    int& getSeat(int i) { return seat[i]; }
+    int& getStationNum() { return stationNum; }
     void setTrainID(const TrainID_type &trainID) { this->trainID = trainID; }
     void setDate(int Date) { this->Date = Date; }
     void setSeat(int i, int seat) { this->seat[i] = seat; }
+    void setStationNum(int stationNum) { this->stationNum = stationNum; }
 };
 class Trainsystem {
     sjtu::BPlusTree<TrainID_type, Train,  BPlusTreeM,BPlusTreeL>released_train,unreleased_train;
