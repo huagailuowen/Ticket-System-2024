@@ -616,10 +616,10 @@ public:
     class innernode_ptr{
         int id;
         innerTreeNode *innernode;
-        const BPlusTree *tree;
+        BPlusTree *tree;
     public:
         innernode_ptr(BPlusTree*tree):  tree(tree){}
-        innernode_ptr(const int &id,const BPlusTree*&tree):id(id),innernode(nullptr),tree( tree){}
+        innernode_ptr(const int &id,BPlusTree*tree):id(id),innernode(nullptr),tree( tree){}
         innernode_ptr(const innernode_ptr &other):id(other.id),innernode(other.innernode),tree(other.tree){}
         innernode_ptr& operator =(const innernode_ptr &other){
             if(this==&other)return *this;
@@ -646,10 +646,10 @@ public:
     class datanode_ptr{
         int id;
         dataNode *datanode;
-        const BPlusTree *tree;
+        BPlusTree *tree;
     public: 
         datanode_ptr(BPlusTree*tree):  tree(tree){}
-        datanode_ptr(const int &id,const BPlusTree*&tree):id(id),datanode(nullptr),tree( tree){}
+        datanode_ptr(const int &id,BPlusTree*tree):id(id),datanode(nullptr),tree( tree){}
         datanode_ptr(const datanode_ptr &other):id(other.id),datanode(other.datanode),tree(other.tree){}
         datanode_ptr& operator =(const datanode_ptr &other){
             if(this==&other)return *this;
@@ -675,7 +675,7 @@ public:
     };
 
 
-    bool search(const key_t &key, val_t &value) const{
+    bool search(const key_t &key, val_t &value) {
         // config Config;
         // getconfig(Config);
         // innerTreeNode *nw;
@@ -723,7 +723,7 @@ public:
         return false;
 
     }
-    bool lower_bound(   const key_t &key,val_t &value)const{
+    bool lower_bound(   const key_t &key,val_t &value){
         // config Config;
         // getconfig(Config);
         // innerTreeNode *nw;
@@ -795,7 +795,7 @@ public:
         }
         return false;
     }
-    void searchall(const key_t &lower_bound,const key_t upper_bound,sjtu::vector<val_t> &value)const
+    void searchall(const key_t &lower_bound,const key_t upper_bound,sjtu::vector<val_t> &value)
     {
         value.clear();
         // config Config;

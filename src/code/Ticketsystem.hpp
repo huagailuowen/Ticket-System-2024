@@ -172,13 +172,13 @@ public:
         //i do not detect if ir
         return true;
     }
-    bool query_train(const TrainID_type &trainID,const int &date,Train& train,ReleasedTrain  &released_train) const{
+    bool query_train(const TrainID_type &trainID,const int &date,Train& train,ReleasedTrain  &released_train) {
         bool res=trainsystem.find_train(trainID,train,1);
         if(res==false) return false;
         res=released_train_info.search(sjtu::make_pair(trainID,date),released_train);
         return res;
     }
-    bool query_train(const TrainID_type &trainID,Train& train) const{
+    bool query_train(const TrainID_type &trainID,Train& train) {
         return trainsystem.find_train(trainID,train);
     }
     void clear()
@@ -187,15 +187,16 @@ public:
         released_train_info.clear();
         UserTicket.clear();
         ticket_queue.clear();
+        order_num.clear();
     }
-    void getalltrain_bystation(const Stationname_type &station,sjtu::vector<Train> &trains) const{
+    void getalltrain_bystation(const Stationname_type &station,sjtu::vector<Train> &trains){
         trainsystem.getalltrain_bystation(station,trains);
     }
     //根据寻址连续性，这种方式实际上是比较快的，因为选中的trainid也是升序排列的？
     //但是还有更快的方法？，就是在station中直接放releasedtrain，这样就不用再次查询了
     //这两种方法哪个更快？？
     //我先写第一种吧
-    bool getreleasedtrain_bytrain(const Train& train,const Stationname_type&station,const Mydate &date,ReleasedTrain& released_train,bool havetobethatday=true) const{
+    bool getreleasedtrain_bytrain(const Train& train,const Stationname_type&station,const Mydate &date,ReleasedTrain& released_train,bool havetobethatday=true){
         //这一出有关一些Transfer的事项好没有搞清楚，以后还得再返工
         //had fixed
         //这里有一个问题，就是如果这个车次在这一天没有开，那么就会出现问题
@@ -228,7 +229,7 @@ public:
         }
     
     }
-    void getalltrain_bystation_time(const Stationname_type &station,const int &date,sjtu::vector<sjtu::pair<Train,ReleasedTrain>> &trains) const{
+    void getalltrain_bystation_time(const Stationname_type &station,const int &date,sjtu::vector<sjtu::pair<Train,ReleasedTrain>> &trains){
         sjtu::vector<Train> possible_train;
         trains.clear();
         getalltrain_bystation(station,possible_train);
@@ -282,7 +283,7 @@ public:
         UserTicket.insert(sjtu::make_pair(user_name,ord_num),ticket);
         return true;
     }
-    void query_order(const UserName_type& user_name,sjtu::vector<Ticket> &tickets) const{
+    void query_order(const UserName_type& user_name,sjtu::vector<Ticket> &tickets){
         tickets.clear();
         UserTicket.searchall(sjtu::make_pair(user_name,0),sjtu::make_pair(user_name,INT_MAX),tickets);
     }

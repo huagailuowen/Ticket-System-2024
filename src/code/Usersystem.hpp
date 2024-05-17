@@ -47,7 +47,7 @@ public:
   Usersystem &operator=(const Usersystem &usersystem) = delete;
   Usersystem(std::string name,bool isnew=false):UserInfo(name+"UserInfo",isnew){}
   int user_num() const { return UserInfo.size(); }
-  bool find_user(const UserName_type &username,User &user) const { 
+  bool find_user(const UserName_type &username,User &user) { 
     bool res=UserInfo.search(username,user);
     return res; 
   } 

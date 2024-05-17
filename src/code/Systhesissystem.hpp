@@ -316,13 +316,6 @@ int Systhesissystem::query_train(const Command  &command,std::ostream &os){
     bool res=ticketsystem.query_train(trainID,date,train,released_train);
     if(res==false)
         return os<<"-1"<<std::endl,-1;
-    /*
-    查询成功：输出共 (<stationNum> + 1) 行。
-
-第一行为 <trainID> <type>。
-
-接下来 <stationNum> 行，第 i 行为 <stations[i]> <ARRIVING_TIME> -> <LEAVING_TIME> <PRICE> <SEAT>，其中 <ARRIVING_TIME> 和 <LEAVING_TIME> 为列车到达本站和离开本站的绝对时间，格式为 mm-dd hr:mi。<PRICE> 为从始发站乘坐至该站的累计票价，<SEAT> 为从该站到下一站的剩余票数。对于始发站的到达时间和终点站的出发时间，所有数字均用 x 代替；终点站的剩余票数用 x 代替。如果车辆还未 release 则认为所有票都没有被卖出去。
-    */
     os<<'0'<<std::endl;
     os<<train.getTrainID()<<" "<<train.getType()<<std::endl;
     int price=0;

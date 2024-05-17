@@ -192,7 +192,7 @@ public:
     Trainsystem &operator=(const Trainsystem &trainsystem)=delete;
     Trainsystem(std::string name,bool isnew=false):released_train(name+"released_train",isnew),unreleased_train(name+"unreleased_train",isnew),station_train(name+"station_train",isnew){}
     int train_num() const { return released_train.size()+unreleased_train.size(); }
-    bool find_train(const TrainID_type &trainID,Train &train,const int &isreleased=0) const { 
+    bool find_train(const TrainID_type &trainID,Train &train,const int &isreleased=0) { 
         //1 means released, 2 means unreleased, 0 means both
         bool res;
         if(isreleased!=2)res=released_train.search(trainID,train);
@@ -231,7 +231,7 @@ public:
         unreleased_train.clear();
         station_train.clear();
     }
-    void getalltrain_bystation(const Stationname_type &station,sjtu::vector<Train> &trains) const{
+    void getalltrain_bystation(const Stationname_type &station,sjtu::vector<Train> &trains){
         trains.clear();
         station_train.searchall(sjtu::make_pair(station,TrainID_type::setmin()),sjtu::make_pair(station,TrainID_type::setmax()),trains);
     }
