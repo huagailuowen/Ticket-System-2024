@@ -36,6 +36,43 @@ public:
         this->saleDate[0] = saleDate[0];
         this->saleDate[1] = saleDate[1];
     }
+    Train(const Train& other) {
+        trainID = other.trainID;
+        stationNum = other.stationNum;
+        for (int i = 0; i < stationNum; i++) {
+            station[i] = other.station[i];
+            price[i] = other.price[i];
+            travelTime[i] = other.travelTime[i];
+            stopoverTime[i] = other.stopoverTime[i];
+            arrivetime[i] = other.arrivetime[i];
+        }
+        seatNum = other.seatNum;
+        startTime = other.startTime;
+        saleDate[0] = other.saleDate[0];
+        saleDate[1] = other.saleDate[1];
+        type = other.type;
+    }
+
+    Train& operator=(const Train& other) {
+        if (this == &other) {
+            return *this;
+        }
+        trainID = other.trainID;
+        stationNum = other.stationNum;
+        for (int i = 0; i < stationNum; i++) {
+            station[i] = other.station[i];
+            price[i] = other.price[i];
+            travelTime[i] = other.travelTime[i];
+            stopoverTime[i] = other.stopoverTime[i];
+            arrivetime[i] = other.arrivetime[i];
+        }
+        seatNum = other.seatNum;
+        startTime = other.startTime;
+        saleDate[0] = other.saleDate[0];
+        saleDate[1] = other.saleDate[1];
+        type = other.type;
+        return *this;
+    }
     TrainID_type getTrainID() const { return trainID; }
     int getStationNum() const { return stationNum; }
     Stationname_type getStation(int i) const { return station[i]; }
@@ -112,6 +149,26 @@ public:
         for (int i = 0; i < stationNum; i++) {
             this->seat[i] = seat[i];
         }
+    }
+    ReleasedTrain(const ReleasedTrain &releasedTrain) {
+        trainID = releasedTrain.trainID;
+        Date = releasedTrain.Date;
+        stationNum = releasedTrain.stationNum;
+        for (int i = 0; i < stationNum; i++) {
+            seat[i] = releasedTrain.seat[i];
+        }
+    }
+    ReleasedTrain& operator=(const ReleasedTrain &releasedTrain) {
+        if (this == &releasedTrain) {
+            return *this;
+        }
+        trainID = releasedTrain.trainID;
+        Date = releasedTrain.Date;
+        stationNum = releasedTrain.stationNum;
+        for (int i = 0; i < stationNum; i++) {
+            seat[i] = releasedTrain.seat[i];
+        }
+        return *this;
     }
     TrainID_type getTrainID() const { return trainID; }
     int getDate() const { return Date; }

@@ -18,6 +18,8 @@ public:
   User() = default;
   User(const UserName_type &username, const Password_type &password, const RealName_type &realName, const MailAddr_type &mailAddr, int privilege)
       : username(username), password(password), realName(realName), mailAddr(mailAddr), privilege(privilege) {}
+  User(const User& other) = default;
+  User& operator=(const User& other) = default;
   UserName_type getUserName() const { return username; }
   Password_type getPassword() const { return password; }
   RealName_type getRealName() const { return realName; }

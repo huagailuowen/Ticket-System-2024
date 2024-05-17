@@ -13,6 +13,21 @@ public:
 public:
   Mystring();
   Mystring(std::string s);
+  Mystring(const Mystring<len>& other){
+    for(int i=0;i<other.l;i++)
+      c[i]=other.c[i];
+    l=other.l;
+    myhash=other.myhash;
+  }
+  Mystring<len>& operator=(const Mystring<len>& other){
+    if(this==&other)
+      return *this;
+    for(int i=0;i<other.l;i++)
+      c[i]=other.c[i];
+    l=other.l;
+    myhash=other.myhash;
+    return *this;
+  }
   operator std::string() const;
 
   friend std::ostream &operator<<(std::ostream &out, const Mystring<len> &the) {

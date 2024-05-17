@@ -616,10 +616,10 @@ public:
     class innernode_ptr{
         int id;
         innerTreeNode *innernode;
-        BPlusTree *tree;
+        const BPlusTree *tree;
     public:
         innernode_ptr(BPlusTree*tree):  tree(tree){}
-        innernode_ptr(int id,BPlusTree*tree):id(id),innernode(nullptr),tree( tree){}
+        innernode_ptr(const int &id,const BPlusTree*&tree):id(id),innernode(nullptr),tree( tree){}
         innernode_ptr(const innernode_ptr &other):id(other.id),innernode(other.innernode),tree(other.tree){}
         innernode_ptr& operator =(const innernode_ptr &other){
             if(this==&other)return *this;
@@ -646,10 +646,10 @@ public:
     class datanode_ptr{
         int id;
         dataNode *datanode;
-        BPlusTree *tree;
+        const BPlusTree *tree;
     public: 
         datanode_ptr(BPlusTree*tree):  tree(tree){}
-        datanode_ptr(int id,BPlusTree*tree):id(id),datanode(nullptr),tree( tree){}
+        datanode_ptr(const int &id,const BPlusTree*&tree):id(id),datanode(nullptr),tree( tree){}
         datanode_ptr(const datanode_ptr &other):id(other.id),datanode(other.datanode),tree(other.tree){}
         datanode_ptr& operator =(const datanode_ptr &other){
             if(this==&other)return *this;

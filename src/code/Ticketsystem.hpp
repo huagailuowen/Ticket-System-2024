@@ -28,6 +28,8 @@ private:
 public:
     Ticket()=default;
     Ticket(const UserName_type &user_name,const TrainID_type &train_id,const Stationname_type &startstation,const Stationname_type &endstation,const Mydate &leavetime,const Mydate &arrivetime,const int &price,const int &seatnum,const TicketType &ticket_type,const int &startstation_date,const int &timestamp,const int &ord_num):user_name(user_name),train_id(train_id),startstation(startstation),endstation(endstation),leavetime(leavetime),arrivetime(arrivetime),price(price),seatnum(seatnum),ticket_type(ticket_type),startstation_date(startstation_date),timestamp(timestamp),order_num(ord_num){}
+    Ticket(const Ticket& other) = default;
+    Ticket& operator=(const Ticket& other) = default;
     const UserName_type &getUserName() const{
         return user_name;
     }

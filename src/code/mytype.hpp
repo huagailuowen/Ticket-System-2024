@@ -112,10 +112,17 @@ struct Mydate {
   Mydate(const Mydate& a):day(a.day),time(a.time){}
   Mydate(const std::string &date, const std::string &time)
       : day(Date_to_int(date)), time(time_to_int(time)) {}
-  Mydate operator+(const Mydate &a) {
+  Mydate& operator=(const Mydate& a) {
+    if (this != &a) {
+      day = a.day;
+      time = a.time;
+    }
+    return *this;
+  }
+  Mydate operator+(const Mydate &a)const {
     return Mydate(day + a.day, time + a.time);
   }
-  Mydate operator-(const Mydate &a) {
+  Mydate operator-(const Mydate &a)const {
     return Mydate(day - a.day, time - a.time);
   }
   static Mydate max() { return Mydate(100000, 0); }
@@ -166,8 +173,8 @@ template <typename T,typename CMP>
 void quickSort(sjtu::vector<T>& arr, int low, int high) {
   if (low < high) {
     int pivotIndex = partition<T,CMP>(arr, low, high);
-    quickSort(arr, low, pivotIndex - 1);
-    quickSort(arr, pivotIndex + 1, high);
+    quickSort<T,CMP>(arr, low, pivotIndex - 1);
+    quickSort<T,CMP>(arr, pivotIndex + 1, high);
   }
 }
 
@@ -176,7 +183,7 @@ int partition(sjtu::vector<T>& arr, int low, int high) {
   T pivot = arr[high];
   int i = low - 1;
   for (int j = low; j < high; j++) {
-    if (CMP(arr[j], pivot)) {
+    if (CMP()(arr[j], pivot)) {
       i++;
       std::swap(arr[i], arr[j]);
     }
