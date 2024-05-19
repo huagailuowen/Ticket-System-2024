@@ -131,9 +131,35 @@ public:
     }
     void setSaleDate(const std::string &input)
     {
-        splittoi(input, saleDate, '|', true);
+        splittoi(input, saleDate, '|', 1);
     }
+    friend std::ostream & operator <<  (std::ostream &os, const Train &train);
 };
+std::ostream &  operator <<  (std::ostream &os, const Train &train)
+{
+    os<<train.getTrainID()<<" "<<train.getStationNum()<<" ";
+    for(int i=0;i<train.getStationNum();i++)
+    {
+        os<<train.getStation(i)<<" ";
+    }
+    os<<train.getSeatNum()<<" ";
+    for(int i=0;i<train.getStationNum();i++)
+    {
+        os<<train.getPrice(i)<<" ";
+    }
+    os<<train.getStartTime()<<" ";
+    for(int i=0;i<train.getStationNum();i++)
+    {
+        os<<train.getTravelTime(i)<<" ";
+    }
+    for(int i=0;i<train.getStationNum();i++)
+    {
+        os<<train.getStopoverTime(i)<<" ";
+    }
+    os<<std::endl;
+    os<<train.getSaleDate(0)<<" "<<train.getSaleDate(1)<<" "<<train.getType();
+    return os;
+}
 class ReleasedTrain {
 #ifdef DEBUG
 public:

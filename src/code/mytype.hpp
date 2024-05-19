@@ -171,7 +171,15 @@ void splittoi(const std::string &str, int *res, const char &token,
     }
   }
   // res[cnt++] = T(str.substr(last, len - last));
-  sscanf(str.substr(last, len - last).c_str(), "%d", &res[cnt++]);
+  if(len-last>0){
+    if (isdate_time == 1)
+      res[cnt++] = Date_to_int(str.substr(last, len - last));
+    else if (isdate_time == 2)
+      res[cnt++] = time_to_int(str.substr(last, len - last));
+    else
+      sscanf(str.substr(last, len - last).c_str(), "%d", &res[cnt++]);
+  
+  }
 }
 template <typename T,typename CMP>
 void quickSort(sjtu::vector<T>& arr, int low, int high) {

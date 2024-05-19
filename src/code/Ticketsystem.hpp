@@ -123,7 +123,7 @@ public:
     //用户可以在同一时间下单吗？？？
     //int 代表时间
     sjtu::BPlusTree<sjtu::pair<sjtu::pair<TrainID_type,int>,sjtu::pair<UserName_type,int>>, Ticket,4,4>ticket_queue;
-    sjtu:: BPlusTree<UserName_type,int,BPlusTreeM,BPlusTreeL>order_num;
+    sjtu::BPlusTree<UserName_type,int,BPlusTreeM,BPlusTreeL>order_num;
     Trainsystem trainsystem;
 public:
     Ticketsystem()=delete;

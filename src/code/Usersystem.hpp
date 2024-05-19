@@ -12,10 +12,10 @@ public:
   Password_type password;
   RealName_type realName;
   MailAddr_type mailAddr;
-  int privilege;
+  int privilege=-1;
 
 public:
-  User() = default;
+  User(){}
   User(const UserName_type &username, const Password_type &password, const RealName_type &realName, const MailAddr_type &mailAddr, int privilege)
       : username(username), password(password), realName(realName), mailAddr(mailAddr), privilege(privilege) {}
   User(const User& other) = default;
@@ -51,10 +51,10 @@ public:
     bool res=UserInfo.search(username,user);
     return res; 
   } 
-  void add_user(User &user) { 
+  void add_user(const User &user) { 
     UserInfo.insert(user.getUserName(),user); 
   }
-  void modify_user(const UserName_type &username,User &user) { UserInfo.modify(username,user); }
+  void modify_user(const UserName_type &username,const User &user) { UserInfo.modify(username,user); }
   void clear()
   {
     UserInfo.clear();

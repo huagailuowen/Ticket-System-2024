@@ -1,3 +1,4 @@
+// #define DEBUG
 #include"Systhesissystem.hpp"
 #include "mytype.hpp"
 #include <cstdio>

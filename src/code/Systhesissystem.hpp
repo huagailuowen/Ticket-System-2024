@@ -86,12 +86,15 @@ int Systhesissystem::add_user(const Command &command,std::ostream &os){
             return os<<"-1"<<std::endl,-1;
         User check_user;
         bool res=usersystem.find_user(user.getUserName(),check_user);
+        
         if(res==true)
             return os<<"-1"<<std::endl,-1;
         if(it->second<=user.getPrivilege())
             return os<<"-1"<<std::endl,-1;
     }
+    
     usersystem.add_user(user);
+   
     return os<<'0'<<std::endl,0;
 }
 int Systhesissystem::login(const Command &command,std::ostream &os){
@@ -121,6 +124,7 @@ int Systhesissystem::login(const Command &command,std::ostream &os){
     return os<<'0'<<std::endl,0;
 }
 int Systhesissystem::logout(const Command &command,std::ostream &os){
+    // std::cerr<<"&";
     if(command.type!=command_type::logout)
         throw TrainSystemError("logout");
     UserName_type cur_user;
@@ -153,9 +157,9 @@ int Systhesissystem::query_profile(const Command &command,std::ostream &os){
     auto it=Userlist.find(cur_user);
     if(it==Userlist.end())
         return os<<"-1"<<std::endl,-1;
-    os<<'0'<<std::endl;
     User user;
     bool res=usersystem.find_user(query_user,user);
+    
     if(res==false)
         return os<<"-1"<<std::endl,-1;
     if(it->second<=user.getPrivilege()&&cur_user!=query_user)
@@ -193,13 +197,17 @@ int Systhesissystem::modify_profile(const Command &command,std::ostream &os){
     auto it=Userlist.find(cur_user);
     if(it==Userlist.end())
         return os<<"-1"<<std::endl,-1;
-    os<<'0'<<std::endl;
     User check_user;
     bool res=usersystem.find_user(query_user,check_user);
     if(res==false)
         return os<<"-1"<<std::endl,-1;
     if(it->second<=check_user.getPrivilege()&&cur_user!=query_user)
         return os<<"-1"<<std::endl,-1;
+    if(user.getPrivilege()==-1)user.setPrivilege(check_user.getPrivilege());
+    if(!user.getUserName().size())user.setUserName(user.getUserName());
+    if(!user.getRealName().size())user.setRealName(check_user.getRealName());
+    if(!user.getMailAddr().size())user.setMailAddr(check_user.getMailAddr());
+    if(!user.getPassword().size())user.setPassword(check_user.getPassword());
     usersystem.modify_user(query_user,user);
     os<<user.getUserName()<<" "<<user.getRealName()<<" "<<user.getMailAddr()<<" "<<user.getPrivilege()<<std::endl;
     return 0;
@@ -217,7 +225,7 @@ int Systhesissystem::add_train(const Command &command,std::ostream &os){
             train.setTrainID(command.auguement[i]);
         }
         else if(command.key[i]=='n'){
-            train.setSeatNum(std::stoi(command.auguement[i]));
+            train.setStationNum(std::stoi(command.auguement[i]));
         }
         else if(command.key[i]=='s'){
             //station
@@ -260,6 +268,7 @@ int Systhesissystem::add_train(const Command &command,std::ostream &os){
     // if(it->second<2)
     //     return os<<"-1"<<std::endl,-1;
     train.updatearrivetime();
+    
     bool res=ticketsystem.add_train(train);
     return res==true?(os<<'0'<<std::endl,0):(os<<"-1"<<std::endl,-1);
 }
@@ -862,7 +871,7 @@ int Systhesissystem::exit(const Command &command,std::ostream &os){
     if(command.type!=command_type::exit)
         throw TrainSystemError("exit");
     Userlist.clear();
-    return os<<'0'<<std::endl,0;
+    return os<<"bye"<<std::endl,0;
 }
 void Systhesissystem::process()
 {
@@ -873,7 +882,10 @@ void Systhesissystem::process()
         if(cmd.type==command_type::inanity){
             continue;
         }
+        
+        #ifdef DEBUG
         std::cerr<<cmd<<std::endl;
+        #endif
         bool res;
         std::ostream& os(std::cout);
         os<<'['<<cmd.timestamp<<']'<<' ';
@@ -885,6 +897,9 @@ void Systhesissystem::process()
         case command_type::login:
             res=login(cmd,os);
             break;  
+        case command_type::logout:
+            res=logout(cmd,os);
+            break;
         case command_type::query_profile:
             res=query_profile(cmd,os);
             break;  
