@@ -4,8 +4,8 @@
 // #include"easyinclude.hpp"
 #include"Trainsystem.hpp"
 #include "mytype.hpp"
-#include <climits>
-#include <ostream>
+// #include <climits>
+#include <iostream>
 class Ticket{
     UserName_type user_name;
     TrainID_type train_id;
@@ -220,7 +220,7 @@ public:
             Mydate curstartdate=date-train.getleavetime(station_index);
             //始发时间>=curstartdate
             int daydate=curstartdate.day;
-            if(curstartdate.time>train.getStartTime()) daydate--;
+            if(curstartdate.time>train.getStartTime()) daydate++;
             bool res=released_train_info.lower_bound(sjtu::make_pair(train.getTrainID(),daydate),released_train);
             if(res==false) return false;
             //找不到了
@@ -229,7 +229,7 @@ public:
         }
     
     }
-    void getalltrain_bystation_time(const Stationname_type &station,const int &date,sjtu::vector<sjtu::pair<Train,ReleasedTrain>> &trains){
+    void getalltrain_bystation_time(const Stationname_type &station,const Mydate &date,sjtu::vector<sjtu::pair<Train,ReleasedTrain>> &trains,bool havetobethatday=true){
         sjtu::vector<Train> possible_train;
         trains.clear();
         getalltrain_bystation(station,possible_train);
@@ -237,7 +237,7 @@ public:
         for(auto &i:possible_train){
             //&加速
             //可以不用get函数调用来加速
-            if(getreleasedtrain_bytrain(i,station,Mydate(date,0),released_train)==false) continue;
+            if(getreleasedtrain_bytrain(i,station,date,released_train,havetobethatday)==false) continue;
             trains.push_back(sjtu::make_pair(i,released_train));
             
         }

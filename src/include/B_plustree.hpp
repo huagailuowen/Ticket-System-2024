@@ -156,8 +156,8 @@ public:
     sjtu::map<int,int > father;
     int time_stamp=0;
     //并发系统
-    static const int MAXtreeblocknum=10000;
-    static const int MAXdatablocknum=10000;
+    static const int MAXtreeblocknum=100;
+    static const int MAXdatablocknum=100;
     std::mutex treeblockmutex[MAXtreeblocknum];
     std::mutex datablockmutex[MAXdatablocknum];
     std::mutex reusemutex;

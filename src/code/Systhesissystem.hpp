@@ -1,5 +1,6 @@
 #ifndef SYSTHESSISSYSTEM_HPP
 #define SYSTHESSISSYSTEM_HPP
+#include <iostream>
 #include <iterator>
 #include <ostream>
 #include <string>
@@ -8,7 +9,6 @@
 #include "Commandsystem.hpp"
 #include "Ticketsystem.hpp"
 #include "Usersystem.hpp"
-#include "Trainsystem.hpp"
 #include "mytype.hpp"
 #include"../include/map.hpp"
 class Systhesissystem{
@@ -25,7 +25,7 @@ public:
     Systhesissystem() = delete;
     Systhesissystem(const Systhesissystem &systhesissystem) = delete;
     Systhesissystem &operator=(const Systhesissystem &systhesissystem) = delete;
-    Systhesissystem(const std::string &name,bool isnew=false):commandsystem(),ticketsystem(name+"ticketsystem",isnew),usersystem(name+"usersystem",isnew){
+    Systhesissystem(std::string name,bool isnew=false):commandsystem(),ticketsystem(name+"ticketsystem",isnew),usersystem(name+"usersystem",isnew){
         Userlist.clear();
     }
     int add_user(const Command &command,std::ostream &os);
@@ -92,7 +92,7 @@ int Systhesissystem::add_user(const Command &command,std::ostream &os){
             return os<<"-1"<<std::endl,-1;
     }
     usersystem.add_user(user);
-    return os<<'0',0;
+    return os<<'0'<<std::endl,0;
 }
 int Systhesissystem::login(const Command &command,std::ostream &os){
     if(command.type!=command_type::login)
@@ -118,7 +118,7 @@ int Systhesissystem::login(const Command &command,std::ostream &os){
     if(user.getPassword()!=cur_password)
         return os<<"-1"<<std::endl,-1;
     Userlist[cur_user]=user.getPrivilege();
-    return os<<'0',0;
+    return os<<'0'<<std::endl,0;
 }
 int Systhesissystem::logout(const Command &command,std::ostream &os){
     if(command.type!=command_type::logout)
@@ -132,9 +132,9 @@ int Systhesissystem::logout(const Command &command,std::ostream &os){
         }
     }
     if(Userlist.find(cur_user)==Userlist.end())
-        return -1;
+        return os<<"-1"<<std::endl,-1;
     Userlist.erase(cur_user);
-    return os<<'0',0;
+    return os<<'0'<<std::endl,0;
 }
 int Systhesissystem::query_profile(const Command &command,std::ostream &os){
     if(command.type!=command_type::query_profile)
@@ -174,6 +174,7 @@ int Systhesissystem::modify_profile(const Command &command,std::ostream &os){
         }
         else if(command.key[i]=='u'){
             query_user=command.auguement[i];
+            user.setUserName(query_user);
         }
         else if(command.key[i]=='n'){
             user.setRealName(command.auguement[i]);
@@ -422,7 +423,7 @@ public:
     }
 };
 
-bool calculate_ticket(const sjtu::pair<Train,ReleasedTrain> &train,const Stationname_type &start_station,const Stationname_type &end_station,Train_sort &train_sort,bool cantherenotickets=false){
+bool calculate_ticket(const sjtu::pair<Train,ReleasedTrain> &train,const Stationname_type &start_station,const Stationname_type &end_station,Train_sort &train_sort,bool cantherenotickets=true){
     int start_station_num=-1;
     int end_station_num=-1;
     for(int i=0;i<train.first.getStationNum();i++){
@@ -452,7 +453,7 @@ bool calculate_ticket(const sjtu::pair<Train,ReleasedTrain> &train,const Station
     return true;
 
 }
-bool calculate_ticket(const sjtu::pair<Train,ReleasedTrain> &train,const int &start_station_num,const int &end_station_num,Train_sort &train_sort,sjtu::pair<int,sjtu::pair<int,int>>hint=sjtu::make_pair(-1,sjtu::make_pair(-1,-1))){
+bool calculate_ticket(const sjtu::pair<Train,ReleasedTrain> &train,const int &start_station_num,const int &end_station_num,Train_sort &train_sort,sjtu::pair<int,sjtu::pair<int,int>>hint=sjtu::make_pair(-1,sjtu::make_pair(-1,-1)),bool can_no_seat=true){
 //hint 1.type 0 means from begin had calculated,tyep 1 means from end had calculated -1
 //hint 2.price 3.seat
     if(start_station_num==-1||end_station_num==-1)
@@ -480,7 +481,7 @@ bool calculate_ticket(const sjtu::pair<Train,ReleasedTrain> &train,const int &st
     }
     //可以不拷贝
     //???要不要显示？？？
-    if(seat==0)
+    if(seat==0&&!can_no_seat)
         return false;
     train_sort=Train_sort(train.first.getTrainID(),leaving_time,arriving_time,price,seat);
     return true;
@@ -525,7 +526,7 @@ int Systhesissystem::query_ticket(const Command &command,std::ostream &os){
     //这两种方法哪个更快？？
     //我先写第一种吧
     Train_sort train_sort;
-    ticketsystem.getalltrain_bystation_time(start_station,date_day,possible_train);
+    ticketsystem.getalltrain_bystation_time(start_station,Mydate(date_day,0),possible_train);
     for(auto &i:possible_train){
         if(calculate_ticket(i,start_station,end_station,train_sort)){
             possible_train_sort.push_back(train_sort);
@@ -572,15 +573,88 @@ int Systhesissystem::query_transfer(const Command &command,std::ostream &os){
     }
     if(is_priority_time==-1)
         throw TrainSystemError("query_transfer");
-    sjtu::vector<sjtu::pair<Train,ReleasedTrain>>possible_train;
-    sjtu::vector<Train>
-    possible_train2;
-    ticketsystem.getalltrain_bystation_time(start_station,date_day,possible_train);
+    sjtu::vector<sjtu::pair<Train,ReleasedTrain>>possible_train,possible_train2;
+    ticketsystem.getalltrain_bystation_time(start_station,Mydate(date_day,0),possible_train);
 
-    sjtu::map<Stationname_type,Train_sort>best_train[2];
+    // sjtu::map<Stationname_type,Train_sort>best_train[2];
     //0 is the first best,1 is the second best
     // 这里不会有环形路线吧
-
+// 感觉现在算法有一些问题
+// 在以时间作为优先级上;
+    sjtu::pair<Train_sort,Train_sort>res={Train_sort(),Train_sort()};
+    auto checkmin=[&res,is_priority_time](const Train_sort&cur_first,const Train_sort&cur_second)->void
+    {
+        if(res.first.getTrainID()==TrainID_type()){
+            res.first=cur_first;
+            res.second=cur_second;
+            return ;
+        }
+        int timeres=res.second.getArrivingTime()-res.first.getLeavingTime();
+        int timecur=cur_second.getArrivingTime()-cur_first.getLeavingTime();
+        // int timecur=cur.second.getArrivingTime()-cur.first.getLeavingTime();
+        int priceres=res.first.getPrice()+res.second.getPrice();
+        // int pricecur=cur.first.getPrice()+cur.second.getPrice();
+        int pricecur=cur_first.getPrice()+cur_second.getPrice();
+        if(is_priority_time){
+            if(priceres!=pricecur){
+                if(priceres>pricecur){
+                    res.first=cur_first;
+                    res.second=cur_second;
+                }
+                return;
+            }
+            if(timeres!=timecur){
+                if(timeres>timecur){
+                    res.first=cur_first;
+                    res.second=cur_second;
+                }
+                return;
+            }
+            if(res.first.getTrainID()!=cur_first.getTrainID()){
+                if(res.first.getTrainID()>cur_first.getTrainID()){
+                    res.first=cur_first;
+                    res.second=cur_second;
+                }
+                return ;
+            }
+            if(res.second.getTrainID()!=cur_second.getTrainID()){
+                if(res.second.getTrainID()>cur_second.getTrainID()){
+                    res.first=cur_first;
+                    res.second=cur_second;
+                }
+                return ;
+            }
+        }else{
+            if(timeres!=timecur){
+                if(timeres>timecur){
+                    res.first=cur_first;
+                    res.second=cur_second;
+                }
+                return;
+            }
+            if(priceres!=pricecur){
+                if(priceres>pricecur){
+                    res.first=cur_first;
+                    res.second=cur_second;
+                }
+                return;
+            }
+            if(res.first.getTrainID()!=cur_first.getTrainID()){
+                if(res.first.getTrainID()>cur_first.getTrainID()){
+                    res.first=cur_first;
+                    res.second=cur_second;
+                }
+                return ;
+            }
+            if(res.second.getTrainID()!=cur_second.getTrainID()){
+                if(res.second.getTrainID()>cur_second.getTrainID()){
+                    res.first=cur_first;
+                    res.second=cur_second;
+                }
+                return ;
+            }
+        }
+    };
     for(auto &i:possible_train){
         for(int j=0;j<i.first.getStationNum();j++){
             if(i.first.getStation(j)==start_station){
@@ -589,112 +663,60 @@ int Systhesissystem::query_transfer(const Command &command,std::ostream &os){
                     if(i.first.getStation(k)==end_station)
                         continue;
                     Train_sort train_sort;
-                    if(calculate_ticket(i,j,k,train_sort,hint)){
-                        if(best_train[0].find(i.first.getStation(k))==best_train[0].end()){
-                            best_train[0][i.first.getStation(k)]=train_sort;
-                        }else{
-                            //这里可以加速
-                            if(best_train[0][i.first.getStation(k)].getArrivingTime()>train_sort.getArrivingTime()){
-                                best_train[1][i.first.getStation(k)]=best_train[0][i.first.getStation(k)];
-                                best_train[0][i.first.getStation(k)]=train_sort;
-                            }else if(best_train[1].find(i.first.getStation(k))==best_train[1].end()||best_train[1][i.first.getStation(k)].getArrivingTime()>train_sort.getArrivingTime()){
-                                best_train[1][i.first.getStation(k)]=train_sort;
-                            }
-                        }
-                    }
-                }
-                break;
-            }
-        }
-    }
-    sjtu::pair<Train_sort,Train_sort>res={Train_sort(),Train_sort()};
-    auto checkmin=[&res,is_priority_time](sjtu::pair<Train_sort,Train_sort>cur)->void
-    {
-        if(res.first.getTrainID()==TrainID_type()){
-            res=cur;
-            return ;
-        }
-        int timeres=res.second.getArrivingTime()-res.first.getLeavingTime();
-        int timecur=cur.second.getArrivingTime()-cur.first.getLeavingTime();
-        int priceres=res.first.getPrice()+res.second.getPrice();
-        int pricecur=cur.first.getPrice()+cur.second.getPrice();
-        if(is_priority_time){
-            if(priceres!=pricecur){
-                if(priceres>pricecur){
-                    res=cur;
-                }
-                return;
-            }
-            if(timeres!=timecur){
-                if(timeres>timecur){
-                    res=cur;
-                }
-                return;
-            }
-            if(res.first.getTrainID()!=cur.first.getTrainID()){
-                if(res.first.getTrainID()>cur.first.getTrainID()){
-                    res=cur;
-                }
-                return ;
-            }
-            if(res.second.getTrainID()!=cur.second.getTrainID()){
-                if(res.second.getTrainID()>cur.second.getTrainID()){
-                    res=cur;
-                }
-                return ;
-            }
-        }else{
-            if(timeres!=timecur){
-                if(timeres>timecur){
-                    res=cur;
-                }
-                return;
-            }
-            if(priceres!=pricecur){
-                if(priceres>pricecur){
-                    res=cur;
-                }
-                return;
-            }
-            if(res.first.getTrainID()!=cur.first.getTrainID()){
-                if(res.first.getTrainID()>cur.first.getTrainID()){
-                    res=cur;
-                }
-                return ;
-            }
-            if(res.second.getTrainID()!=cur.second.getTrainID()){
-                if(res.second.getTrainID()>cur.second.getTrainID()){
-                    res=cur;
-                }
-                return ;
-            }
-        }
-    };
-    ticketsystem.getalltrain_bystation(end_station,possible_train2);
-    for(auto &i:possible_train2){
-        for(int j=i.getStationNum()-1;j>=0;j--){
-            if(i.getStation(j)==end_station){
-                Train_sort train_sort;  
-                ReleasedTrain released_train;
-                sjtu::pair<int, sjtu::pair<int,int>>hint(1,sjtu::make_pair(0,1000000));
-                for(int k=j-1;k>=0;k--){
-                    Stationname_type transfer_station=i.getStation(k);
-                    auto it=best_train[0].find(transfer_station);
-                    if(it==best_train[0].end())continue;
-                    if(it->second.getTrainID()==i.getTrainID()){
-                        it=best_train[1].find(transfer_station);
-                        if(it==best_train[1].end())
+                    Stationname_type transfer_station=i.first.getStation(k);
+                    if(!calculate_ticket(i,j,k,train_sort,hint))
+                        continue;
+                        // if(best_train[0].find(i.first.getStation(k))==best_train[0].end()){
+                        //     best_train[0][i.first.getStation(k)]=train_sort;
+                        // }else{
+                        //     //这里可以加速
+                        //     if(best_train[0][i.first.getStation(k)].getArrivingTime()>train_sort.getArrivingTime()){
+                        //         best_train[1][i.first.getStation(k)]=best_train[0][i.first.getStation(k)];
+                        //         best_train[0][i.first.getStation(k)]=train_sort;
+                        //     }else if(best_train[1].find(i.first.getStation(k))==best_train[1].end()||best_train[1][i.first.getStation(k)].getArrivingTime()>train_sort.getArrivingTime()){
+                        //         best_train[1][i.first.getStation(k)]=train_sort;
+                        //     }
+                        // }
+                    Mydate transfer_time=train_sort.getArrivingTime();
+                    ticketsystem.getalltrain_bystation_time(i.first.getStation(k),transfer_time,possible_train2,false);
+                    Train_sort train_sort2;
+                    for(auto &ii:possible_train2){
+                        if(!calculate_ticket(ii,transfer_station,end_station,train_sort2,true))
                             continue;
+                        checkmin(train_sort,train_sort2);
+                        break;
                     }
-                    Mydate transfer_date=it->second.getArrivingTime();
-                    ticketsystem.getreleasedtrain_bytrain(i,transfer_station,transfer_date,released_train);
-                    calculate_ticket(sjtu::make_pair(i,released_train),k,j,train_sort);
-                    checkmin(sjtu::make_pair(it->second,train_sort)) ;                   
                 }
                 break;
             }
         }
     }
+    //下面这种做法是错的
+    // ticketsystem.getalltrain_bystation(end_station,possible_train2);
+    // for(auto &i:possible_train2){
+    //     for(int j=i.getStationNum()-1;j>=0;j--){
+    //         if(i.getStation(j)==end_station){
+    //             Train_sort train_sort;  
+    //             ReleasedTrain released_train;
+    //             sjtu::pair<int, sjtu::pair<int,int>>hint(1,sjtu::make_pair(0,1000000));
+    //             for(int k=j-1;k>=0;k--){
+    //                 Stationname_type transfer_station=i.getStation(k);
+    //                 auto it=best_train[0].find(transfer_station);
+    //                 if(it==best_train[0].end())continue;
+    //                 if(it->second.getTrainID()==i.getTrainID()){
+    //                     it=best_train[1].find(transfer_station);
+    //                     if(it==best_train[1].end())
+    //                         continue;
+    //                 }
+    //                 Mydate transfer_date=it->second.getArrivingTime();
+    //                 ticketsystem.getreleasedtrain_bytrain(i,transfer_station,transfer_date,released_train);
+    //                 calculate_ticket(sjtu::make_pair(i,released_train),k,j,train_sort);
+    //                 checkmin(sjtu::make_pair(it->second,train_sort)) ;                   
+    //             }
+    //             break;
+    //         }
+    //     }
+    // }
     if(res.first.getTrainID()==TrainID_type())
         return os<<"0"<<std::endl,-1;//not -1
     os<<res.first<<std::endl;
@@ -845,10 +867,14 @@ int Systhesissystem::exit(const Command &command,std::ostream &os){
 void Systhesissystem::process()
 {
     Command cmd;
+        // getchar();
     while (commandsystem.readcommand(cmd),true)
     {
+        if(cmd.type==command_type::inanity){
+            continue;
+        }
+        std::cerr<<cmd<<std::endl;
         bool res;
-        
         std::ostream& os(std::cout);
         os<<'['<<cmd.timestamp<<']'<<' ';
         switch (cmd.type)

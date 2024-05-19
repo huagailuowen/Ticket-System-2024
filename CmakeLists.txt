@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 3.12)
 project(TicketSystem)
 
 set(CMAKE_CXX_STANDARD 20)
-
+# Enable debug mode and disable optimization
+set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
 # Add the include directory
 include_directories(include)
 

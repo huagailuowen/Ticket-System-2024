@@ -1,10 +1,13 @@
 #ifndef COMMANDSYSTEM_HPP
 #define COMMANDSYSTEM_HPP
+#include "Systhesissystem.hpp"
 #include"easyinclude.hpp"
 #include "../include/vector.hpp" // Add the missing include statement for the 'sjtu' namespace.
 #include "mytype.hpp"
 #include <cstdlib>
 #include <istream>
+#include <ostream>
+#include <random>
 #include <string>
 #include<iostream>
 // #include<sstream>
@@ -31,10 +34,71 @@ struct Command {
         auguement=std::move(command.auguement);
         return *this;
     }
-    
+    void inputstring(const std::string &s);
     Command(const std::string &s);
+    friend std::ostream& operator<<(std::ostream &os, const Command &command);
 
 };
+std::ostream& operator<<(std::ostream &os, const Command &command) {
+    os << "[" << command.timestamp << "] ";
+    switch (command.type) {
+        case command_type::add_user:
+            os << "add_user";
+            break;
+        case command_type::login:
+            os << "login";
+            break;
+        case command_type::logout:
+            os << "logout";
+            break;
+        case command_type::query_profile:
+            os << "query_profile";
+            break;
+        case command_type::modify_profile:
+            os << "modify_profile";
+            break;
+        case command_type::add_train:
+            os << "add_train";
+            break;
+        case command_type::release_train:
+            os << "release_train";
+            break;
+        case command_type::query_train:
+            os << "query_train";
+            break;
+        case command_type::delete_train:
+            os << "delete_train";
+            break;
+        case command_type::query_ticket:
+            os << "query_ticket";
+            break;
+        case command_type::query_transfer:
+            os << "query_transfer";
+            break;
+        case command_type::buy_ticket:
+            os << "buy_ticket";
+            break;
+        case command_type::query_order:
+            os << "query_order";
+            break;
+        case command_type::refund_ticket:
+            os << "refund_ticket";
+            break;
+        case command_type::clean:
+            os << "clean";
+            break;
+        case command_type::exit:
+            os << "exit";
+            break;
+        default:
+            os << "invalid";
+            break;
+    }
+    for (int i = 0; i < command.auguementNum; ++i) {
+        os << " -" << command.key[i] << " " << command.auguement[i];
+    }
+    return os;
+}
 command_type string_to_command_type(const std::string &s) {
     if (s == "add_user") {
         return command_type::add_user;
@@ -73,10 +137,11 @@ command_type string_to_command_type(const std::string &s) {
     }
 }
 std::istream &operator>>(std::istream &iss, Command &command) {
+    throw TrainSystemError("not use it");
     std::string timestamp;
     iss >>  timestamp;
     command.timestamp=std::stoi(timestamp.substr(1, timestamp.size() - 2)); // Read the timestamp
-
+    command.auguement.clear();
     std::string cmd;
     iss >> cmd; // Read the command type
     command.type = string_to_command_type(cmd); // Convert the command type to an enum
@@ -98,36 +163,53 @@ std::istream &operator>>(std::istream &iss, Command &command) {
     return iss;
 }
 Command::Command(const std::string &s) {
-    std::string::size_type pos = 0;
-    std::string timestamp;
-    pos = s.find(' ');
-    timestamp = s.substr(0, pos);
-    this->timestamp = std::stoi(timestamp.substr(1, timestamp.size() - 2)); // Read the timestamp
-    std::string cmd;
-    pos = s.find(' ', pos + 1);
-    cmd = s.substr(pos + 1, s.find(' ', pos + 1) - pos - 1); // Read the command type
-    this->type = string_to_command_type(cmd); // Convert the command type to an enum
-    std::string key;
-    while (pos != std::string::npos) {
-        pos = s.find(' ', pos + 1);
-        if (pos == std::string::npos) {
-            break;
-        }
-        key = s.substr(pos + 1, 1);
-        if (key[0] != '-') {
-            break; // Stop reading if the key is not preceded by '-'
-        }
-        this->key.push_back(key[0]); // Add the key to the vector
-        std::string argument;
-        pos = s.find(' ', pos + 1);
-        if (pos == std::string::npos) {
-            argument = s.substr(pos + 1);
-        } else {
-            argument = s.substr(pos + 1, s.find(' ', pos + 1) - pos - 1); // Read the argument
-        }
-        this->auguement.push_back(argument); // Add the argument to the vector
+    std::string str[30];
+    int size=splittos(s, str, ' ');
+    if(size==0){
+        this->type=command_type::inanity;
+        return ;
     }
-
+    if(size<2)
+        throw TrainSystemError("Invalid command:too few arguments");
+    this->timestamp = std::stoi(str[0].substr(1, str[0].size() - 2)); // Read the timestamp
+    this->type = string_to_command_type(str[1]); // Convert the command type to an enum
+    for (int i = 2; i < size; ++i) {
+        if (str[i].size() <2 || str[i][0] != '-') {
+            throw TrainSystemError("Invalid command:invalid key");
+        }
+        this->key.push_back(str[i][1]); // Add the key to the vector
+        ++i;
+        if(i>=size)
+            throw TrainSystemError("Invalid command:odd number of arguments");
+        this->auguement.push_back(str[i]); // Add the argument to the vector
+    }
+    this->auguementNum = this->auguement.size(); // Set the auguementNum
+}
+void Command::inputstring(const std::string &s) {
+    this->auguementNum=0;
+    this->key.clear();
+    this->auguement.clear();
+    
+    std::string str[30];
+    int size=splittos(s, str, ' ');
+    if(size==0){
+        this->type=command_type::inanity;
+        return ;
+    }
+    if(size<2)
+        throw TrainSystemError("Invalid command:too few arguments");
+    this->timestamp = std::stoi(str[0].substr(1, str[0].size() - 2)); // Read the timestamp
+    this->type = string_to_command_type(str[1]); // Convert the command type to an enum
+    for (int i = 2; i < size; ++i) {
+        if (str[i].size() <2 || str[i][0] != '-') {
+            throw TrainSystemError("Invalid command:invalid key");
+        }
+        this->key.push_back(str[i][1]); // Add the key to the vector
+        ++i;
+        if(i>=size)
+            throw TrainSystemError("Invalid command:odd number of arguments");
+        this->auguement.push_back(str[i]); // Add the argument to the vector
+    }
     this->auguementNum = this->auguement.size(); // Set the auguementNum
 }
 class Commandsystem {
@@ -136,7 +218,10 @@ public:
     Commandsystem() = default;
     void readcommand(Command& command)
     {
-        std::cin>>command;
+        // char s[1000];
+        string s;
+        std::getline(std::cin,s);    
+        command.inputstring(s);
         return;
     }
     void getcommand(Command& command,const std::string &s)
@@ -145,6 +230,7 @@ public:
         return;
     }
 };
+    
 
 
 #endif // COMMANDSYSTEM_HPP

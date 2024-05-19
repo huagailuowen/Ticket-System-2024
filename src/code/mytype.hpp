@@ -14,7 +14,7 @@ class TrainSystemError {
 
 public:
   TrainSystemError(const std::string &s) : msg(s) {}
-  string what() { return msg; }
+  std::string what() const{ return msg; }
 };
 enum class quiry_type {
   All /*共有*/,
@@ -50,7 +50,8 @@ enum class command_type {
   refund_ticket,
   clean,
   exit,
-  invalid
+  invalid,
+  inanity,
 };
 const int Month_day[13] = {0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 int Date_to_int(std::string date) {
@@ -134,17 +135,20 @@ std::ostream &operator<<(std::ostream &os, const Mydate &a) {
   return os;
 }
 template <class T>
-void splittos(const std::string &str, T *res, const char &token) {
+int splittos(const std::string &str, T *res, const char &token) {
   int len = str.length();
   int cnt = 0;
   int last = 0;
   for (int i = 0; i < len; i++) {
     if (str[i] == token) {
-      res[cnt++] = T(str.substr(last, i - last));
+      if(i-last>0)
+        res[cnt++] = T(str.substr(last, i - last));
       last = i + 1;
     }
   }
-  res[cnt++] = T(str.substr(last, len - last));
+  if(len-last>0)
+    res[cnt++] = T(str.substr(last, len - last));
+  return cnt;
 }
 // template <class T>
 void splittoi(const std::string &str, int *res, const char &token,
