@@ -2,6 +2,7 @@
 #include"Systhesissystem.hpp"
 #include "mytype.hpp"
 #include <cstdio>
+extern int TIME;
 int main() {
     std::string systemname="test"; 
     Systhesissystem system( systemname,true);

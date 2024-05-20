@@ -6,6 +6,7 @@
 #include "mytype.hpp"
 // #include <climits>
 #include <iostream>
+extern int TIME;
 class Ticket{
     UserName_type user_name;
     TrainID_type train_id;
@@ -138,7 +139,8 @@ public:
     }
     int get_order_num(const UserName_type &username){
         int num;
-        order_num.search(username,num);
+        bool res=order_num.search(username,num);
+        if(res==false) throw TrainSystemError("No such user in order");
         return num;
     }
     void modify_order_num(const UserName_type &username,const int &num){
@@ -179,7 +181,7 @@ public:
         return res;
     }
     bool query_train(const TrainID_type &trainID,Train& train) {
-        return trainsystem.find_train(trainID,train);
+        return trainsystem.find_train(trainID,train,1);
     }
     void clear()
     {
@@ -200,21 +202,21 @@ public:
         //这一出有关一些Transfer的事项好没有搞清楚，以后还得再返工
         //had fixed
         //这里有一个问题，就是如果这个车次在这一天没有开，那么就会出现问题
-
-        int station_index=0;
+        int station_index=-1;
         for(int j=0;j<train.getStationNum();j++){
             if(station==train.getStation(j)){
                 station_index=j;
                 break;
             }
         }
-        if(station_index+1==train.getStationNum()) return false;
+        if(station_index==-1||station_index+1==train.getStationNum()) return false;
         //不走终点站
         if(havetobethatday==true){
             //不是换车的情况，date.time==0
             if(date.time!=0)throw   TrainSystemError("Invalid date,not transfering");
             //这里不是arrivetime，而是leavetime吧？？
-            int takedays=(train.getleavetime(station_index)+Mydate(0,train.getStartTime())).day;
+            Mydate tmp=train.getleavetime(station_index);
+            int takedays=tmp.day;
             return released_train_info.search(sjtu::make_pair(train.getTrainID(),date.day-takedays),released_train);
         }else{
             Mydate curstartdate=date-train.getleavetime(station_index);
@@ -245,21 +247,22 @@ public:
     bool buy_ticket(const TrainID_type& trainID,const Stationname_type& startstation,const Stationname_type& endstation,const Train&train,ReleasedTrain released_train,const UserName_type& user_name,const int price,const int& num,const int& timestamp){
         int start_station_num=-1;
         int end_station_num=-1;
+        
         // int price = 0;
         for(int i=0;i<train.getStationNum();i++){
             if(train.getStation(i)==startstation) start_station_num=i;
             if(train.getStation(i)==endstation) {end_station_num=i;break;}
-            if(i+1==train.getStationNum()) throw TrainSystemError("No such station");
-            if(start_station_num/=-1){
-                if((released_train.getSeat(i)-=num)<0)throw TrainSystemError("No enough seat");
+            if(i+1==train.getStationNum()) throw TrainSystemError("buyti_No such station");
+            if(start_station_num!=-1){
+                if((released_train.getSeat(i)-=num)<0)throw TrainSystemError("buyti_No enough seat");
                 // price+=train.getPrice(i);
             }
         }
-        if(start_station_num==-1||end_station_num==-1) throw TrainSystemError("No such station");
+        if(start_station_num==-1||end_station_num==-1) throw TrainSystemError("buyti_No such station");
         int ord_num;
         modify_order_num(user_name,ord_num=get_order_num(user_name)+1);
         released_train_info.modify(sjtu::make_pair(trainID,released_train.getDate()),released_train);
-        UserTicket.insert(sjtu::make_pair(user_name,ord_num),Ticket(user_name,trainID,startstation,endstation,Mydate(released_train.getDate(),train.getleavetime(start_station_num)),Mydate(released_train.getDate(),train.getleavetime(end_station_num)),price*num,num,Ticket::TicketType::success,released_train.getDate(),timestamp,ord_num));
+        UserTicket.insert(sjtu::make_pair(user_name,ord_num),Ticket(user_name,trainID,startstation,endstation,Mydate(released_train.getDate(),train.getleavetime(start_station_num)),Mydate(released_train.getDate(),train.getarrivetime(end_station_num)),price,num,Ticket::TicketType::success,released_train.getDate(),timestamp,ord_num));
         return true;
     }
     bool add_queue( const TrainID_type& trainID,const Stationname_type& startstation,const Stationname_type& endstation,const Train&train,ReleasedTrain released_train,const UserName_type& user_name,const int &price,const int& num,const int& timestamp){
@@ -269,9 +272,9 @@ public:
         for(int i=0;i<train.getStationNum();i++){
             if(train.getStation(i)==startstation) start_station_num=i;
             if(train.getStation(i)==endstation) {end_station_num=i;break;}
-            if(i+1==train.getStationNum()) throw TrainSystemError("No such station");
+            if(i+1==train.getStationNum()) throw TrainSystemError("addq_No such station");
         }
-        if(start_station_num==-1||end_station_num==-1) throw TrainSystemError("No such station");
+        if(start_station_num==-1||end_station_num==-1) throw TrainSystemError("add_qNo such station");
         // Ticket ticket(  user_name,trainID,startstation,endstation,
         // train.getleavetime(start_station_num)+Mydate(released_train.getDate(),0),
         // train.getarrivetime(end_station_num)+Mydate(released_train.getDate(),0)
@@ -302,7 +305,7 @@ public:
             if(train.getStation(i)==ticket.getEndStation()) {end_station_num=i;break;}
             curseatnum=std::min(curseatnum,released_train.getSeat(i));
         }
-        if(start_station_num==-1||end_station_num==-1) throw TrainSystemError("No such station");
+        if(start_station_num==-1||end_station_num==-1) throw TrainSystemError("trybuy_No such station");
         if(curseatnum<ticket.getSeatNum()) return false;
         for(int i=start_station_num;i<end_station_num;i++){
             released_train.setSeat(i,released_train.getSeat(i)-ticket.getSeatNum());
@@ -335,7 +338,7 @@ public:
                 if(train.getStation(i)==ticket.getStartStation()) start_station_num=i;
                 if(train.getStation(i)==ticket.getEndStation()) {end_station_num=i;break;}
             }
-            if(start_station_num==-1||end_station_num==-1) throw TrainSystemError("No such station");
+            if(start_station_num==-1||end_station_num==-1) throw TrainSystemError("refund_No such station");
             for(int i=start_station_num;i<end_station_num;i++){
                 released_train.setSeat(i,released_train.getSeat(i)+ticket.getSeatNum());
             }

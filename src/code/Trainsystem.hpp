@@ -4,7 +4,9 @@
 // Your code goes here
 // #include "easyinclude.hpp"
 #include "mytype.hpp"
+#include<iostream>
 #include "../include/B_plustree.hpp"
+extern int TIME;
 const int MAXSTATIONNUM = 100;
 static const int BPlusTreeM=4, BPlusTreeL=4;
 class Train {
@@ -32,6 +34,7 @@ public:
             this->price[i] = price[i];
             this->travelTime[i] = travelTime[i];
             this->stopoverTime[i] = stopoverTime[i];
+
         }
         this->saleDate[0] = saleDate[0];
         this->saleDate[1] = saleDate[1];
@@ -108,6 +111,7 @@ public:
     }
     Mydate getleavetime(int i) const
     {
+        if(i>99)std::cerr<<"}}}}}}}}}}}}}}"<<std::endl;
         if(i>=stationNum)throw "error";
         Mydate tmp = arrivetime[i];
         if(i!=0)tmp = tmp + Mydate(0,stopoverTime[i-1]);
@@ -220,10 +224,11 @@ public:
     int train_num() const { return released_train.size()+unreleased_train.size(); }
     bool find_train(const TrainID_type &trainID,Train &train,const int &isreleased=0) { 
         //1 means released, 2 means unreleased, 0 means both
-        bool res;
+        bool res=false;
         if(isreleased!=2)res=released_train.search(trainID,train);
         //we ensure that the same trainID will only appear in one of the two trees
         if(isreleased==1)return res;
+        if(res==true)return res;
         if(isreleased!=1) res=unreleased_train.search(trainID,train);
         return res; 
     }

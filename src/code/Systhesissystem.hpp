@@ -1,7 +1,7 @@
 #ifndef SYSTHESSISSYSTEM_HPP
 #define SYSTHESSISSYSTEM_HPP
 #include <iostream>
-#include <iterator>
+// #include <iterator>
 #include <ostream>
 #include <string>
 #include <utility> // Include the <utility> header file
@@ -11,6 +11,7 @@
 #include "Usersystem.hpp"
 #include "mytype.hpp"
 #include"../include/map.hpp"
+int TIME=0;
 class Systhesissystem{
 private:
 #ifdef DEBUG
@@ -94,7 +95,7 @@ int Systhesissystem::add_user(const Command &command,std::ostream &os){
     }
     
     usersystem.add_user(user);
-   
+    ticketsystem.add_user(user.getUserName());
     return os<<'0'<<std::endl,0;
 }
 int Systhesissystem::login(const Command &command,std::ostream &os){
@@ -159,6 +160,7 @@ int Systhesissystem::query_profile(const Command &command,std::ostream &os){
         return os<<"-1"<<std::endl,-1;
     User user;
     bool res=usersystem.find_user(query_user,user);
+    
     
     if(res==false)
         return os<<"-1"<<std::endl,-1;
@@ -249,7 +251,7 @@ int Systhesissystem::add_train(const Command &command,std::ostream &os){
             train.setTravelTime(command.auguement[i]);   
         }
         else if(command.key[i]=='o'){
-            // train.setStopoverTime(command.auguement[i]);
+            train.setStopoverTime(command.auguement[i]);
 
         }else if(command.key[i]=='y'){
             #ifdef DEBUG
@@ -326,7 +328,6 @@ int Systhesissystem::query_train(const Command  &command,std::ostream &os){
     bool res=ticketsystem.query_train(trainID,date,train,released_train);
     if(res==false)
         return os<<"-1"<<std::endl,-1;
-    os<<'0'<<std::endl;
     os<<train.getTrainID()<<" "<<train.getType()<<std::endl;
     int price=0;
     Mydate curdate(released_train.getDate(),train.getStartTime());
@@ -336,19 +337,20 @@ int Systhesissystem::query_train(const Command  &command,std::ostream &os){
             os<<"xx-xx xx:xx";
         }else{
             os<<curdate;
-            if(i+1<train.getStationNum()){
-                curdate=curdate+Mydate(0,train.getTravelTime(i-1));
-            }
+            
         }
         os<<" -> ";
+        if(i>0&&i+1<train.getStationNum()){
+            curdate=curdate+Mydate(0,train.getStopoverTime(i-1));
+        }
         if(i+1==train.getStationNum()){
             os<<"xx-xx xx:xx";
         }
         else{
             os<<curdate;
         } 
-        if(i!=0&&i+2<train.getStationNum()){
-            curdate=curdate+Mydate(0,train.getStopoverTime(i-1));
+        if(i+1<train.getStationNum()){
+            curdate=curdate+Mydate(0,train.getTravelTime(i));
         }
         os<<" "<<price<<" ";
         if(i+1==train.getStationNum()){
@@ -378,7 +380,8 @@ public:
     friend class cmpTrain_by_cost;
 public:
     Train_sort()=default;
-    Train_sort(TrainID_type trainID,Mydate leaving_time,Mydate arriving_time,int price,int seat):trainID(trainID),leaving_time(leaving_time),arriving_time(arriving_time),price(price),seat(seat){}
+    Train_sort(const TrainID_type &trainID,const Stationname_type &start_station,const Stationname_type &end_station,const Mydate &leaving_time,const Mydate &arriving_time,const int &price,const int &seat):trainID(trainID),start_station(start_station),end_station(end_station),leaving_time(leaving_time),arriving_time(arriving_time),price(price),seat(seat){}
+
     TrainID_type getTrainID() const{
         return trainID;
     }
@@ -394,7 +397,7 @@ public:
     int getSeat() const{
         return seat;
     }
-    static Train_sort max(){return Train_sort(TrainID_type::setmax(),Mydate(),Mydate::max(),100000,100000);}
+    static Train_sort max(){return Train_sort(TrainID_type::setmax(),Stationname_type::setmax(),Stationname_type::setmax(),Mydate(),Mydate::max(),100000,100000);}
     friend std::ostream &operator<<(std::ostream &os,const Train_sort &a);
 };
 std::ostream& operator<<(std::ostream& os, const Train_sort& a) {
@@ -447,8 +450,9 @@ bool calculate_ticket(const sjtu::pair<Train,ReleasedTrain> &train,const Station
         return false;
     if(start_station_num>=end_station_num)
         return false;
-    Mydate leaving_time=train.first.getleavetime(start_station_num);
-    Mydate arriving_time=train.first.getarrivetime(end_station_num);
+    
+    Mydate leaving_time=train.first.getleavetime(start_station_num)+Mydate(train.second.getDate(),0);
+    Mydate arriving_time=train.first.getarrivetime(end_station_num)+Mydate(train.second.getDate(),0);
     int price=0,seat=1000000;
     for(int i=start_station_num;i<end_station_num;i++){
         price+=train.first.getPrice(i);
@@ -458,7 +462,7 @@ bool calculate_ticket(const sjtu::pair<Train,ReleasedTrain> &train,const Station
     //???要不要显示？？？
     if(seat==0&&!cantherenotickets)
         return false;
-    train_sort=Train_sort(train.first.getTrainID(),leaving_time,arriving_time,price,seat);
+    train_sort=Train_sort(train.first.getTrainID(),train.first.getStation(start_station_num),train.first.getStation(end_station_num),leaving_time,arriving_time,price,seat);
     return true;
 
 }
@@ -492,7 +496,7 @@ bool calculate_ticket(const sjtu::pair<Train,ReleasedTrain> &train,const int &st
     //???要不要显示？？？
     if(seat==0&&!can_no_seat)
         return false;
-    train_sort=Train_sort(train.first.getTrainID(),leaving_time,arriving_time,price,seat);
+    train_sort=Train_sort(train.first.getTrainID(),train.first.getStation(start_station_num),train.first.getStation(end_station_num),leaving_time,arriving_time,price,seat);
     return true;
 
 }
@@ -528,6 +532,7 @@ int Systhesissystem::query_ticket(const Command &command,std::ostream &os){
     if(is_priority_time==-1)
         throw TrainSystemError("query_ticket");
         // return os<<"-1"<<std::endl,-1;
+
     sjtu::vector<sjtu::pair<Train,ReleasedTrain>>possible_train;
     sjtu::vector<Train_sort>possible_train_sort;
     //根据寻址连续性，这种方式实际上是比较快的，因为选中的trainid也是升序排列的？
@@ -535,12 +540,13 @@ int Systhesissystem::query_ticket(const Command &command,std::ostream &os){
     //这两种方法哪个更快？？
     //我先写第一种吧
     Train_sort train_sort;
-    ticketsystem.getalltrain_bystation_time(start_station,Mydate(date_day,0),possible_train);
+    ticketsystem.getalltrain_bystation_time(start_station,Mydate(date_day,0),possible_train,true);
     for(auto &i:possible_train){
         if(calculate_ticket(i,start_station,end_station,train_sort)){
             possible_train_sort.push_back(train_sort);
         }
     }
+    
     if(is_priority_time==1)
         quickSort<Train_sort,cmpTrain_by_time>(possible_train_sort,0,possible_train_sort.size()-1);
     else if(is_priority_time==0)
@@ -786,7 +792,7 @@ int Systhesissystem::buy_ticket(const Command &command,std::ostream &os){
     res=ticketsystem.query_train(trainID,train);
     if(res==false)
         return os<<"-1"<<std::endl,-1;
-    res=ticketsystem.getreleasedtrain_bytrain(train,start_station,Mydate(date_day,0),released_train);
+    res=ticketsystem.getreleasedtrain_bytrain(train,start_station,Mydate(date_day,0),released_train,true);
     if(res==false)
         return os<<"-1"<<std::endl,-1;
     Train_sort train_sort;
@@ -804,6 +810,7 @@ int Systhesissystem::buy_ticket(const Command &command,std::ostream &os){
     
     }else{
         os<<train_sort.getPrice()*ticket_num<<std::endl;
+        
         ticketsystem.buy_ticket(trainID,start_station,end_station,train,released_train,cur_user,train_sort.getPrice(),ticket_num,command.timestamp);
         return 0;
     }
@@ -828,7 +835,17 @@ int Systhesissystem::query_order(const Command &command,std::ostream &os){
     os<<ticket.size()<<std::endl;
     //倒序输出
     for(int i=ticket.size()-1;i>=0;i--){
-        os<<ticket[i].getTrainID()<<" "<<ticket[i].getStartStation()<<" "<<ticket[i].getEndStation()<<" "<<ticket[i].getLeaveTime()<<" "<<ticket[i].getArriveTime()<<" "<<ticket[i].getPrice()<<" "<<ticket[i].getSeatNum()<<std::endl;
+        if(ticket[i].getTicketType()==Ticket::TicketType::success){
+            os<<"[success] ";
+        }else if(ticket[i].getTicketType()==Ticket::TicketType::pending){
+            os<<"[pending] ";
+        }else if(ticket[i].getTicketType()==Ticket::TicketType::refunded){
+            os<<"[refunded] ";
+        }else{
+            throw TrainSystemError("query_order");
+        }
+        //example : [success] INSCRIPTIONS 陕西省渭南市 07-22 11:00 -> 福建省永安市 07-22 14:39 2574 10051
+        os<<ticket[i].getTrainID()<<" "<<ticket[i].getStartStation()<<" "<<ticket[i].getLeaveTime()<<" -> "<<ticket[i].getEndStation()<<" "<<ticket[i].getArriveTime()<<" "<<ticket[i].getPrice()<<" "<<ticket[i].getSeatNum()<<std::endl;
     }
     return 0;
 }
@@ -849,6 +866,7 @@ int Systhesissystem::refund_ticket(const Command &command,std::ostream &os){
     auto it=Userlist.find(cur_username);
     if(it==Userlist.end())
         return os<<"-1"<<std::endl,-1;
+    
     if(index<1||index>ticketsystem.get_order_num(cur_username))
         return os<<"-1"<<std::endl,-1;
     bool res=ticketsystem.refund_ticket(cur_username,index);
@@ -888,7 +906,9 @@ void Systhesissystem::process()
         #endif
         bool res;
         std::ostream& os(std::cout);
+        TIME=cmd.timestamp;
         os<<'['<<cmd.timestamp<<']'<<' ';
+        
         switch (cmd.type)
         {
         case command_type::add_user:

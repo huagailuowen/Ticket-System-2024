@@ -78,7 +78,7 @@ std::string int_to_Date(int days) {
     day -= Month_day[month];
     month++;
   }
-  std::string date = std::to_string(year) + "-";
+  std::string date ;//= std::to_string(year) + "-";
   if (month < 10)
     date += "0";
   date += std::to_string(month) + "-";

@@ -9,7 +9,7 @@ class BPlusTree {
     public:
     std::map<key_t,val_t>mp;
     BPlusTree(){}
-    BPlusTree(std::string file_name,bool isnew=false){}
+    BPlusTree(std::string file_name,bool isnew=false){file_name="";isnew=false;}
     void insert(const key_t &key,const val_t &val){
         mp[key]=val;
     }

@@ -2,7 +2,7 @@
 #define MYSTRING_HPP
 #include<string>
 template <const int len> struct Mystring {
-private:
+// private:
 #ifdef DEBUG
 public:
 #endif
@@ -14,7 +14,7 @@ public:
   Mystring();
   Mystring(std::string s);
   Mystring(const Mystring<len>& other){
-    for(int i=0;i<other.l;i++)
+    for(int i=0;i<=other.l;i++)
       c[i]=other.c[i];
     l=other.l;
     myhash=other.myhash;
@@ -22,9 +22,10 @@ public:
   Mystring<len>& operator=(const Mystring<len>& other){
     if(this==&other)
       return *this;
-    for(int i=0;i<other.l;i++)
+    for(int i=0;i<=other.l;i++)
       c[i]=other.c[i];
     l=other.l;
+
     myhash=other.myhash;
     return *this;
   }

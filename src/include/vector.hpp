@@ -327,7 +327,7 @@ public:
    * clears the contents
    */
   void clear() {
-    for (int i = 0; i < current_size; i++) {
+    for (int i = 0; i < (int)current_size; i++) {
       std::destroy_at(begin_ptr + i);
     }
     alloc.deallocate(begin_ptr, max_size);
