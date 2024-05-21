@@ -45,7 +45,7 @@ function tmp () {
     mktemp -p /tmp ticket.XXXXXXXXXX
   fi
 }
-
+rm -r /tmp/ticket.*
 function tmpdir () {
   if [ Darwin = "$(uname -s)" ]; then
     mktemp -d /tmp/ticket.XXXXXXXXXX

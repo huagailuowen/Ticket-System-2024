@@ -1,14 +1,45 @@
+#ifndef BPLUSTREE_HPP
+#define BPLUSTREE_HPP
+#define FAST
 #ifdef FAST
 #include<map>
 #include"vector.hpp"
 #include"utility.hpp"
+#include<utility>
+#include <fstream>
 namespace sjtu{
 template <class key_t,class val_t,int M,int L>
 class BPlusTree {
     public:
+    std::string file_name;
+    std::fstream file;
     std::map<key_t,val_t>mp;
     BPlusTree(){}
-    BPlusTree(std::string file_name,bool isnew=false){file_name="";isnew=false;}
+    BPlusTree(std::string file_name,bool isnew=false):file_name(file_name){
+        if(isnew==true){
+            file.open(file_name,std::ios::out);
+            file.close();
+            return;
+        }
+        file.open(file_name,std::ios::app);
+        if(file.tellp()==0){
+            int n=0;
+            file.write(reinterpret_cast<char*>(&n),sizeof(int));
+            file.close();
+            return;
+        }else file.close();
+        file.open(file_name,std::ios::in|std::ios::out);
+        int n;
+        file.read(reinterpret_cast<char*>(&n),sizeof(int));
+        for(int i=0;i<n;i++){
+            key_t key;
+            val_t val;
+            file.read(reinterpret_cast<char*>(&key),sizeof(key_t));
+            file.read(reinterpret_cast<char*>(&val),sizeof(val_t));
+            mp[key]=val;
+        }
+        file.close();
+    }
     void insert(const key_t &key,const val_t &val){
         mp[key]=val;
     }
@@ -45,11 +76,20 @@ class BPlusTree {
         val=it->second;
         return true;
     }
+    ~BPlusTree(){
+        file.open(file_name,std::ios::out);
+        int n=mp.size();
+        file.write(reinterpret_cast<char*>(&n),sizeof(int));
+        for(auto it:mp){
+            std::pair<key_t,val_t> tmp=it;
+            file.write(reinterpret_cast<char*>(&tmp.first),sizeof(key_t));
+            file.write(reinterpret_cast<char*>(&tmp.second),sizeof(val_t));
+        }
+        file.close();
+    }
 };
 }
 #endif
-#ifndef BPLUSTREE_HPP
-#define BPLUSTREE_HPP
 #ifndef FAST
 #include <cassert>
 #include <condition_variable>
@@ -64,7 +104,9 @@ class BPlusTree {
 #include "vector.hpp"
 #include "utility.hpp"
 #include "priority_queue.hpp"
-
+using Mysize_t = long long;
+extern int TIME;
+Mysize_t THELIMITFILESIZE=3000000000LL;
 // #define DEBUG
 namespace sjtu{
 
@@ -185,9 +227,9 @@ public:
     std::string treefile;
     std::fstream file;
     config Config;
-    static const int buffersize=30;
-    innerTreeNode treebuffer[30];
-    dataNode databuffer[30];
+    static const int buffersize=10;
+    innerTreeNode treebuffer[buffersize];
+    dataNode databuffer[buffersize];
     sjtu::priority_queue<sjtu::pair<int,int>>treebufferqueue;
     sjtu::priority_queue<sjtu::pair<int,int>>databufferqueue;
     sjtu::priority_queue<sjtu::pair<int,int>>treevacantqueue;
@@ -234,26 +276,26 @@ public:
         std::cerr<<"treecnt: "<<Config.treecnt<<std::endl;
     }
     #endif
-    void getallelement(sjtu::vector<key_t>&key,sjtu::vector<val_t>&value){
-        key.clear();
-        value.clear();
-        // config Config;
-        // getconfig(Config);
-        dataNode* datanw;
-        buffergetdatafile(datanw,Config.datahead);
-        while(datanw->id!=Config.dataend){
-            for(int i=0;i<datanw->num;i++){
-                key.push_back(datanw->keys[i]);
-                value.push_back(datanw->values[i]);
-            }
-            buffergetdatafile(datanw,datanw->next);
-        }
-        for(int i=0;i<datanw->num;i++){
-            key.push_back(datanw->keys[i]);
-            value.push_back(datanw->values[i]);
-        }
+    // void getallelement(sjtu::vector<key_t>&key,sjtu::vector<val_t>&value){
+    //     key.clear();
+    //     value.clear();
+    //     // config Config;
+    //     // getconfig(Config);
+    //     dataNode* datanw;
+    //     buffergetdatafile(datanw,Config.datahead);
+    //     while(datanw->id!=Config.dataend){
+    //         for(int i=0;i<datanw->num;i++){
+    //             key.push_back(datanw->keys[i]);
+    //             value.push_back(datanw->values[i]);
+    //         }
+    //         buffergetdatafile(datanw,datanw->next);
+    //     }
+    //     for(int i=0;i<datanw->num;i++){
+    //         key.push_back(datanw->keys[i]);
+    //         value.push_back(datanw->values[i]);
+    //     }
 
-    }
+    // }
     #ifdef DEBUG
     bool checktree()
     {
@@ -266,8 +308,8 @@ public:
         st[0]=Config.root;
         int las=Config.datahead;
         bool flag=false;
-        int mm=-1,MM=100000000;
-        test[Config.root]=100000000;
+        int mm=-1,MM=THELIMITFILESIZE0;
+        test[Config.root]=THELIMITFILESIZE0;
         testm[Config.root]=-1;
 
         while(h<=t){
@@ -384,7 +426,7 @@ public:
         st[0]=Config.root;
         int las=Config.datahead;
         bool flag=false;
-        test[Config.root]=100000000;
+        test[Config.root]=THELIMITFILESIZE0;
         testm[Config.root]=-1;
         while(h<=t){
             int u=st[h++];
@@ -477,28 +519,28 @@ public:
     {
         // file.seekp(std::ios::beg);
         // file.open(is_tree?treefile:datafile, std::ios::in | std::ios::out);
-        int fsize = file.tellp();
+        Mysize_t fsize = file.tellp();
         file.seekp(0,std::ios::end);
         // std::cerr<<file.tellp()<<std::endl;
-        fsize = (int)file.tellp() - fsize;
-        if(fsize<0||fsize>10000000){
-            std::cerr<<"error in checkfilesize"<<std::endl;
+        fsize = (Mysize_t)file.tellp() - fsize;
+        if(fsize<0||fsize>THELIMITFILESIZE){
+            std::cerr<<datafile<<"error in checkfilesize"<<std::endl;
             std::cerr<<fsize<<std::endl;
             exit(-1);
         }
-        size_t blocksize=is_tree?sizeof(innerTreeNode):sizeof(dataNode);
+        Mysize_t blocksize=is_tree?sizeof(innerTreeNode):sizeof(dataNode);
         // std::cerr<<(is_tree?"tree":"data")<<fsize<<" "<<pos<<" "<<blocksize<<std::endl;
         // getchar();
-        int repos=sizeof(config)+pos*blocksize;
-        if(repos<0||repos>10000000){
-            std::cerr<<"error in checkfilesize"<<std::endl;
+        Mysize_t repos=(Mysize_t)(is_tree?sizeof(config):0)+(Mysize_t)pos*blocksize;
+        if(repos<0||repos>THELIMITFILESIZE){
+            std::cerr<<TIME<<' '<<pos<<' '<<datafile<<"error in checkfilesize"<<std::endl;
             std::cerr<<repos<<std::endl;
             exit(-1);
         }
         if(fsize<repos){
-            int times=(sizeof(config)*is_tree+(pos+1)*blocksize-fsize-1)/blocksize;
-            if(times>100000){
-                std::cerr<<"error in checkfilesize"<<std::endl;
+            int times=((Mysize_t)sizeof(config)*is_tree+((Mysize_t)pos+1)*blocksize-fsize-1ll)/blocksize;
+            if(times>1000000){
+                std::cerr<<datafile<<"error in checkfilesize"<<std::endl;
                 std::cerr<<times<<std::endl;
                 exit(-1);
             }
@@ -517,8 +559,8 @@ public:
     void gettreefile(innerTreeNode &node,int pos){
         file.open(treefile, std::ios::in | std::ios::out);
         checkfilesize(pos,true);
-        int repos=sizeof(config)+pos*sizeof(innerTreeNode);
-        assert(0<=repos&&repos<10000000);
+        Mysize_t repos=(Mysize_t)sizeof(config)+(Mysize_t)pos*sizeof(innerTreeNode);
+        assert(0<=repos&&repos<THELIMITFILESIZE);
         file.seekg(repos,std::ios::beg);
         file.read(reinterpret_cast<char *>(&node), sizeof(innerTreeNode));
         file.close();
@@ -526,8 +568,8 @@ public:
     void settreefile(innerTreeNode &node,int pos){
         file.open(treefile, std::ios::in | std::ios::out);
         checkfilesize(pos,true);
-        int repos=sizeof(config)+pos*sizeof(innerTreeNode); 
-        assert(0<=repos&&repos<10000000);
+        Mysize_t repos=(Mysize_t)sizeof(config)+(Mysize_t)pos*sizeof(innerTreeNode); 
+        assert(0<=repos&&repos<THELIMITFILESIZE);
         file.seekp(repos,std::ios::beg);
         file.write(reinterpret_cast<char *>(&node), sizeof(innerTreeNode));
         file.close();
@@ -541,6 +583,7 @@ public:
 
                 while(true){
                     int p=treebufferqueue.top().second;
+                    if(p==-1)std::cerr<<"^^^^^^^^^^^^^error in buffergettreefile"<<std::endl;
                     //这里指那个tree的id
                     int ppos=treepos[p];
                     if(treebufferqueue.top().first!=-treetime[p]){
@@ -564,6 +607,7 @@ public:
             treepos[pos]=ppos;
             treebufferqueue.push(sjtu::make_pair(-(treetime[pos]=++time_stamp),pos));
             //注记：大根堆
+            if(pos==-1) std::cerr<<"error in buffergettreefile"<<std::endl;
             gettreefile(treebuffer[ppos],pos);
             node=treebuffer+ppos;
         }else{
@@ -606,8 +650,8 @@ public:
     void getdatafile(dataNode &node,int pos){
         file.open(datafile, std::ios::in | std::ios::out);
         checkfilesize(pos,false);
-        int repos=sizeof(config)+pos*sizeof(dataNode);
-        if(repos<0||repos>10000000){
+        Mysize_t repos=(Mysize_t)pos*sizeof(dataNode);
+        if(repos<0||repos>THELIMITFILESIZE){
             std::cerr<<"error in getdatafile"<<std::endl;
             std::cerr<<repos<<std::endl;
             exit(-1);
@@ -619,8 +663,8 @@ public:
     void setdatafile(dataNode &node,int pos){
         file.open(datafile, std::ios::in | std::ios::out);
         checkfilesize(pos,false);
-        int repos=sizeof(config)+pos*sizeof(dataNode);
-        if(repos<0||repos>10000000){
+        Mysize_t repos=(Mysize_t)pos*sizeof(dataNode);
+        if(repos<0||repos>THELIMITFILESIZE){
             std::cerr<<"error in setdatafile"<<std::endl;
             std::cerr<<repos<<std::endl;
             exit(-1);
@@ -639,6 +683,7 @@ public:
                 // std::cerr<<pos<<" "<<databufferqueue.top().second<<'|'<<databufferqueue.size()<<"data:\n";
                 while(true){
                     int p=databufferqueue.top().second;
+                    if(p==-1)std::cerr<<"^^^^^^^^^^^^^error in buffergetdatafile"<<std::endl;
                     int ppos=datapos[p];
                     if(databufferqueue.top().first!=-datatime[p]){
                         databufferqueue.pop();
@@ -655,6 +700,7 @@ public:
                     break;
                 }
             }
+            if(pos==-1) std::cerr<<"error in buffergetdatafile"<<std::endl;
             int ppos=datavacantqueue.top().second;
             datavacantqueue.pop();
             datapos[pos]=ppos;
@@ -770,7 +816,7 @@ public:
             // while (i < nw->num-1 && key > nw->keys[i]) {
             //     i++;
             // }
-            i=mylowerbound( nw->keys,nw->num-1,key);;
+            i=mylowerbound( nw->keys,nw->num-1,key);
             nw.get(nw->children[i]);
             // buffergettreefile(nw,nw->children[i]);
             depth++;
