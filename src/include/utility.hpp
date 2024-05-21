@@ -41,6 +41,7 @@ template <class T1, class T2>
 sjtu::pair<T1, T2> make_pair(T1&& first, T2&& second) {
     return pair<T1, T2>(std::forward<T1>(first), std::forward<T2>(second));
 }
+
 }
 
 #endif

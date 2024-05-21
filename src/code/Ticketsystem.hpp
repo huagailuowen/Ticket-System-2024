@@ -107,6 +107,7 @@ public:
 };
 /*格式为 [<STATUS>] <trainID> <FROM> <LEAVING_TIME> -> <TO> <ARRIVING_TIME> <PRICE> <NUM>，其中 <NUM> 为购票数量， <STATUS> 表示该订单的状态，可能的值为：success（购票已成功）、pending（位于候补购票队列中）和 refunded（已经退票）。*/
 std::ostream& operator <<(std::ostream &os,const Ticket &ticket){
+    os<<ticket.timestamp<<' '<<ticket.order_num<<' '<<ticket.user_name<<" ";
     os<<"[";
     if(ticket.ticket_type==Ticket::TicketType::success) os<<"success";
     else if(ticket.ticket_type==Ticket::TicketType::pending) os<<"pending";
@@ -119,12 +120,12 @@ private:
 #ifdef DEBUG
 public:
 #endif
-    sjtu::BPlusTree<sjtu::pair<TrainID_type,int >, ReleasedTrain,4,4>released_train_info;
-    sjtu::BPlusTree<sjtu::pair<UserName_type,int>,Ticket,BPlusTreeM,BPlusTreeL> UserTicket;
+    sjtu::BPlusTree<sjtu::pair<TrainID_type,int >, ReleasedTrain,200,8>released_train_info;
+    sjtu::BPlusTree<sjtu::pair<UserName_type,int>,Ticket,40,40> UserTicket;
     //用户可以在同一时间下单吗？？？
     //int 代表时间
-    sjtu::BPlusTree<sjtu::pair<sjtu::pair<TrainID_type,int>,sjtu::pair<UserName_type,int>>, Ticket,4,4>ticket_queue;
-    sjtu::BPlusTree<UserName_type,int,BPlusTreeM,BPlusTreeL>order_num;
+    sjtu::BPlusTree<sjtu::pair<sjtu::pair<TrainID_type,int>,sjtu::pair<UserName_type,int>>, Ticket,80,40>ticket_queue;
+    sjtu::BPlusTree<UserName_type,int,80,400>order_num;
     Trainsystem trainsystem;
 public:
     Ticketsystem()=delete;
@@ -143,8 +144,8 @@ public:
         if(res==false) throw TrainSystemError("No such user in order");
         return num;
     }
-    void modify_order_num(const UserName_type &username,const int &num){
-        order_num.modify(username,num);
+    bool modify_order_num(const UserName_type &username,const int &num){
+        return order_num.modify(username,num);
     }
 
     bool add_train(const Train &train){
@@ -176,7 +177,19 @@ public:
     }
     bool query_train(const TrainID_type &trainID,const int &date,Train& train,ReleasedTrain  &released_train) {
         bool res=trainsystem.find_train(trainID,train,1);
-        if(res==false) return false;
+        if(res==false){
+            res=trainsystem.find_train(trainID,train,2);
+            if(res==false) return false;
+            if(date<train.getSaleDate(0)||date>train.getSaleDate(1)) return false;
+            released_train.setTrainID(trainID);
+            released_train.setStationNum(train.getStationNum());
+            for(int i=0;i<(int)train.getStationNum()-1;i++){
+                //there must minus one because the last station is the terminal station
+                released_train.setSeat(i,train.getSeatNum());
+            }
+            released_train.setDate(date);
+            return res;
+        }
         res=released_train_info.search(sjtu::make_pair(trainID,date),released_train);
         return res;
     }
@@ -219,7 +232,7 @@ public:
             int takedays=tmp.day;
             return released_train_info.search(sjtu::make_pair(train.getTrainID(),date.day-takedays),released_train);
         }else{
-            Mydate curstartdate=date-train.getleavetime(station_index);
+            Mydate curstartdate=date-(train.getleavetime(station_index)-train.getleavetime(0));
             //始发时间>=curstartdate
             int daydate=curstartdate.day;
             if(curstartdate.time>train.getStartTime()) daydate++;
@@ -256,6 +269,7 @@ public:
             if(start_station_num!=-1){
                 if((released_train.getSeat(i)-=num)<0)throw TrainSystemError("buyti_No enough seat");
                 // price+=train.getPrice(i);
+                
             }
         }
         if(start_station_num==-1||end_station_num==-1) throw TrainSystemError("buyti_No such station");
@@ -280,9 +294,10 @@ public:
         // train.getarrivetime(end_station_num)+Mydate(released_train.getDate(),0)
         // ,price*num,num,Ticket::TicketType::pending,released_train.getDate(),timestamp,order_num);
         int ord_num;
-        Ticket  ticket(user_name,trainID,startstation,endstation,Mydate(released_train.getDate(),train.getleavetime(start_station_num)),Mydate(released_train.getDate(),train.getarrivetime(end_station_num)),price*num,num,Ticket::TicketType::pending,released_train.getDate(),timestamp,ord_num=get_order_num(user_name)+1);
+        Ticket  ticket(user_name,trainID,startstation,endstation,Mydate(released_train.getDate(),train.getleavetime(start_station_num)),Mydate(released_train.getDate(),train.getarrivetime(end_station_num)),price,num,Ticket::TicketType::pending,released_train.getDate(),timestamp,ord_num=get_order_num(user_name)+1);
         ticket_queue.insert(    sjtu::make_pair(sjtu::make_pair(trainID,timestamp),sjtu::make_pair(user_name,ord_num=get_order_num(user_name)+1)),ticket);
-        modify_order_num(user_name,ord_num);
+        bool res=modify_order_num(user_name,ord_num);
+        if(res==false) throw TrainSystemError("addq_No such user");
         UserTicket.insert(sjtu::make_pair(user_name,ord_num),ticket);
         return true;
     }
@@ -290,9 +305,9 @@ public:
         tickets.clear();
         UserTicket.searchall(sjtu::make_pair(user_name,0),sjtu::make_pair(user_name,INT_MAX),tickets);
     }
-    bool try_buy_ticket(const UserName_type &user_name,const int &index){
-        Ticket ticket;
-        UserTicket.search(sjtu::make_pair(user_name,index),ticket);
+    bool try_buy_ticket(const UserName_type  user_name,const int &index,const Ticket &ticket){
+        // Ticket ticket;
+        // UserTicket.search(sjtu::make_pair(user_name,index),ticket);
         if(ticket.getTicketType()!=Ticket::TicketType::pending) throw TrainSystemError("Invalid ticket");
         Train train;
         ReleasedTrain released_train;
@@ -306,15 +321,25 @@ public:
             curseatnum=std::min(curseatnum,released_train.getSeat(i));
         }
         if(start_station_num==-1||end_station_num==-1) throw TrainSystemError("trybuy_No such station");
+        // std::cerr<<"AHAHHAHAHAHAHA"<<std::endl;
+        
+        // std::cerr<<"!!!"<<curseatnum<<" "<<ticket.getSeatNum()<<std::endl;
         if(curseatnum<ticket.getSeatNum()) return false;
+        std::cerr<<"-------------------------------------------\n";
+        std::cerr<<ticket<<std::endl;
+
         for(int i=start_station_num;i<end_station_num;i++){
             released_train.setSeat(i,released_train.getSeat(i)-ticket.getSeatNum());
         }
         released_train_info.modify(sjtu::make_pair(ticket.getTrainID(),ticket.getStartStationDate()),released_train);
-        ticket.setTicketType(Ticket::TicketType::success);
-        UserTicket.modify(sjtu::make_pair(user_name,index),ticket);
+        Ticket newticket(ticket);
+        newticket.setTicketType(Ticket::TicketType::success);
+        // UserName_type user_name=ticket.getUserName();
+        // int index=ticket.getOrderNum();
+        // sjtu::pair<UserName_type,int> user_order=sjtu::make_pair(user_name,index);
+        UserTicket.modify(sjtu::make_pair(user_name,index),newticket);
         //这里ticket_queue 也删除
-        ticket_queue.remove(sjtu::make_pair(sjtu::make_pair(ticket.getTrainID(),ticket.getTimestamp()),sjtu::make_pair(user_name,index)));
+        ticket_queue.remove(sjtu::make_pair(sjtu::make_pair(ticket.getTrainID(),ticket.getTimestamp()),sjtu::make_pair(ticket.getUserName(),index)));
         return true;
     }
     bool refund_ticket(const UserName_type& user_name,const int &num_by_last){
@@ -342,22 +367,29 @@ public:
             for(int i=start_station_num;i<end_station_num;i++){
                 released_train.setSeat(i,released_train.getSeat(i)+ticket.getSeatNum());
             }
-            released_train_info.modify(sjtu::make_pair(trainID, ticket.getStartStationDate()),released_train);
+            bool res=released_train_info.modify(sjtu::make_pair(trainID, ticket.getStartStationDate()),released_train);
+            if(!res){
+                throw   TrainSystemError("refund_No such train");
+            }
             is_extra_seat=true;
+            
         }else{
             ticket.setTicketType(Ticket::TicketType::refunded);
-            ticket_queue.remove(sjtu::make_pair(sjtu::make_pair(trainID,ticket.getTimestamp()),sjtu::make_pair(user_name,ord_num-num_by_last+1)));
-
+            bool res=ticket_queue.remove(sjtu::make_pair(sjtu::make_pair(trainID,ticket.getTimestamp()),sjtu::make_pair(user_name,ord_num-num_by_last+1)));
+            if(!res) throw TrainSystemError("refund_No such ticket");
         }
         ticket.setTicketType(Ticket::TicketType::refunded);
 
-        UserTicket.modify(sjtu::make_pair(user_name,ord_num-num_by_last+1),ticket);
+        bool res=UserTicket.modify(sjtu::make_pair(user_name,ord_num-num_by_last+1),ticket);
+        if(!res) throw TrainSystemError("refund_No such ticket");
         if(is_extra_seat==false)return true;
         sjtu::vector<Ticket>    tickets;
-        ticket_queue.searchall(sjtu::make_pair(sjtu::make_pair(trainID,0),  sjtu::make_pair(UserName_type::setmin(),0)),sjtu::make_pair(sjtu::make_pair(trainID,INT_MAX),  sjtu::make_pair(UserName_type::setmax(),INT_MAX)),tickets);
+        ticket_queue.searchall(sjtu::make_pair(sjtu::make_pair(trainID,0),  sjtu::make_pair(UserName_type::setmin(),0)),
+        sjtu::make_pair(sjtu::make_pair(trainID,INT_MAX),  sjtu::make_pair(UserName_type::setmax(),INT_MAX)),tickets);
         // sjtu::vector<sjtu::pair<UserName_type,int>>delete_tickets;
         for(auto &i:tickets){
             if(i.getTicketType()!=Ticket::TicketType::pending) throw TrainSystemError("Invalid ticket");
+            try_buy_ticket(i.getUserName(),i.getOrderNum(),i);
         }
         return true;
     }

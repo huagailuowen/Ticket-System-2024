@@ -184,24 +184,18 @@ void splittoi(const std::string &str, int *res, const char &token,
 template <typename T,typename CMP>
 void quickSort(sjtu::vector<T>& arr, int low, int high) {
   if (low < high) {
-    int pivotIndex = partition<T,CMP>(arr, low, high);
-    quickSort<T,CMP>(arr, low, pivotIndex - 1);
-    quickSort<T,CMP>(arr, pivotIndex + 1, high);
-  }
-}
-
-template <typename T,typename CMP>
-int partition(sjtu::vector<T>& arr, int low, int high) {
-  T pivot = arr[high];
-  int i = low - 1;
-  for (int j = low; j < high; j++) {
-    if (CMP()(arr[j], pivot)) {
-      i++;
-      std::swap(arr[i], arr[j]);
+    int l = low, r = high;
+    T key = arr[l];
+    while (l < r) {
+      while (l < r && !CMP()(arr[r], key)) r--;
+      if (l < r) arr[l++] = arr[r];
+      while (l < r && !CMP()(key, arr[l])) l++;
+      if (l < r) arr[r--] = arr[l];
     }
+    arr[l] = key;
+    quickSort<T,CMP>(arr, low, l - 1);
+    quickSort<T,CMP>(arr, l + 1, high);
   }
-  std::swap(arr[i + 1], arr[high]);
-  return i + 1;
 }
 
 #endif

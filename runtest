@@ -1,7 +1,10 @@
 #!/bin/bash
-cd code
-g++ -g -std=c++20 -o0 ../src/code/main.cpp -o main
-cd ..
+rm -r coding
+mkdir coding
+# cd coding
+g++ -g -std=c++20 -o0 ./src/code/main.cpp -o maincoding -W -fsanitize=address -fsanitize=undefined 
+# cd ..
+
 if [ ! -e testcases/config.json ]; then
   echo "./testcases/config.json does not exist, please extract testcases to that directory."
   exit 1
@@ -29,7 +32,7 @@ if [ -z "$list" ]; then
   exit 1
 fi
 
-exename="code"
+exename="maincoding"
 if [ ! -e "$exename" ]; then
   echo "Please compile the ticket system and place the executable at \"$exename\""
   exit 1
@@ -67,10 +70,15 @@ for i in $list; do
   if diff -ZB "$outfile" "$basedir/$i.out" > "$difffile"; then true; else
     cat "$difffile" | head -5
     backup="test-$1-$i-$(date '+%s').log"
-    cp "$outfile" "$cwd/$backup"
+    ans="test-$1-$i-$(date '+%s').ans"
+    input="test-$1-$i-$(date '+%s').in"
+    cp "$outfile" "$cwd/coding/$backup"
+    cp "$basedir/$i.out" "$cwd/coding/$ans"
+    cp "$basedir/$i.in" "$cwd/coding/$input"
     echo "Test failed on input #$i."
     echo "Output saved to $backup"
-    exit 1
+    code -d "$cwd/coding/$backup"  "$cwd/coding/$ans"
+    # exit 1
   fi
   rm "$outfile" "$difffile"
 done

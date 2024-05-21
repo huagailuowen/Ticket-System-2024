@@ -1,16 +1,18 @@
 // #define DEBUG
+// #define FAST
 #include"Systhesissystem.hpp"
 #include "mytype.hpp"
 #include <cstdio>
 extern int TIME;
 int main() {
     std::string systemname="test"; 
-    Systhesissystem system( systemname,true);
+    Systhesissystem system( systemname,false);
     try{
         system.process();
     }
     catch(const TrainSystemError &e){
         std::cerr<<e.what()<<std::endl;
+        std::cout<<e.what()<<std::endl;
     }
     return 0;
 }

@@ -111,7 +111,6 @@ public:
     }
     Mydate getleavetime(int i) const
     {
-        if(i>99)std::cerr<<"}}}}}}}}}}}}}}"<<std::endl;
         if(i>=stationNum)throw "error";
         Mydate tmp = arrivetime[i];
         if(i!=0)tmp = tmp + Mydate(0,stopoverTime[i-1]);
@@ -212,10 +211,20 @@ public:
     void setDate(int Date) { this->Date = Date; }
     void setSeat(int i, int seat) { this->seat[i] = seat; }
     void setStationNum(int stationNum) { this->stationNum = stationNum; }
+    friend std::ostream & operator <<  (std::ostream &os, const ReleasedTrain &releasedTrain);
 };
+std::ostream &  operator <<  (std::ostream &os, const ReleasedTrain &releasedTrain)
+{
+    os<<releasedTrain.getTrainID()<<" "<<releasedTrain.getDate()<<" "<<releasedTrain.getStationNum()<<"\n";
+    for(int i=0;i<releasedTrain.getStationNum();i++)
+    {
+        os<<releasedTrain.getSeat(i)<<" ";
+    }
+    return os;
+}
 class Trainsystem {
-    sjtu::BPlusTree<TrainID_type, Train,  BPlusTreeM,BPlusTreeL>released_train,unreleased_train;
-    sjtu::BPlusTree<sjtu::pair<Stationname_type, TrainID_type>, Train, BPlusTreeM,BPlusTreeL>  station_train;
+    sjtu::BPlusTree<TrainID_type, Train,  200,4>released_train,unreleased_train;
+    sjtu::BPlusTree<sjtu::pair<Stationname_type, TrainID_type>, Train, 80,4>  station_train;
 public:
     Trainsystem ()=delete;
     Trainsystem(const Trainsystem &trainsystem)=delete;

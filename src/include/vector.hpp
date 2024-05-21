@@ -4,6 +4,7 @@
 #include "exceptions.hpp"
 #include <climits>
 #include <cstddef>
+#include <iterator>
 #include <memory>
 namespace sjtu {
 /**
@@ -145,7 +146,7 @@ public:
     using value_type = T;
     using pointer = T *;
     using reference = T &;
-    using iterator_category = std::output_iterator_tag;
+    using iterator_category = std::random_access_iterator_tag;
 
   private:
     /*TODO*/

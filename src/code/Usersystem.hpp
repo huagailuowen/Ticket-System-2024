@@ -39,7 +39,7 @@ public:
 };
 
 class Usersystem {
-  sjtu::BPlusTree<UserName_type,User,userBPlusTreeM,userBPlusTreeL>UserInfo;
+  sjtu::BPlusTree<UserName_type,User,200,40>UserInfo;
   
 public:
   Usersystem() = delete;
