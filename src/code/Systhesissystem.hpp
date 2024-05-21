@@ -208,7 +208,7 @@ int Systhesissystem::modify_profile(const Command &command,std::ostream &os){
         return os<<"-1"<<std::endl,-1;
     if(it->second<=check_user.getPrivilege()&&cur_user!=query_user)
         return os<<"-1"<<std::endl,-1;
-    if(user.getPrivilege()!=-1&&it->second<user.getPrivilege())
+    if(user.getPrivilege()!=-1&&it->second<=user.getPrivilege())
         return os<<"-1"<<std::endl,-1;
     if(user.getPrivilege()==-1)user.setPrivilege(check_user.getPrivilege());
     if(!user.getUserName().size())user.setUserName(user.getUserName());
