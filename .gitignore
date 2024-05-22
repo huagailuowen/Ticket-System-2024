@@ -7,9 +7,9 @@
 *.dylib
 *.dll
 *.log
+
 .vscode/
 .cache/
-# Executables
 *.exe
 *.in
 *.out
@@ -22,3 +22,7 @@ bin/
 lib/
 coding/
 code/
+test/
+tester/
+# Files starting with "testticket"
+testticket*

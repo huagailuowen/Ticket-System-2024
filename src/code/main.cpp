@@ -21,6 +21,11 @@ int main() {
         std::cerr<<e.what()<<std::endl;
         std::cout<<e.what()<<std::endl;
     }
+    catch(const char* e){
+        std::cerr<<e<<std::endl;
+        std::cout<<e<<std::endl;
+    }
+    
     return 0;
 }
 /*

@@ -2,6 +2,8 @@
 #define USERSYSTEM_HPP
 // #include "easyinclude.hpp"
 #include "mytype.hpp"
+#include "../include/external_map.hpp"
+#include "../include/external_bpt.hpp"
 const int userBPlusTreeM=4, userBPlusTreeL=4;
 class User {
 private:
@@ -39,8 +41,8 @@ public:
 };
 
 class Usersystem {
-  sjtu::BPlusTree<UserName_type,User,200,40>UserInfo;
-  
+  // sjtu::BPlusTree<UserName_type,User,200,40>UserInfo;
+  sjtu::external_bpt<UserName_type,User,200,40>UserInfo;
 public:
   Usersystem() = delete;
   Usersystem(const Usersystem &usersystem) = delete;

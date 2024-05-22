@@ -2,6 +2,7 @@
 #define SJTU_VECTOR_HPP
 
 #include "exceptions.hpp"
+
 #include <climits>
 #include <cstddef>
 #include <iterator>
@@ -206,6 +207,9 @@ public:
   };
   size_t max_size, current_size;
   T *begin_ptr;
+  T* begin_p()const {
+    return begin_ptr;
+  }
   /**
    * TODO Constructs
    * At least two: default constructor, copy constructor
@@ -219,6 +223,21 @@ public:
     for (size_t i = 0; i < n; i++) {
       std::construct_at(begin_ptr + i, value);
     }
+  }
+  void resize(size_t n) {
+    if (n > max_size) {
+      T *new_begin_ptr = alloc.allocate(n);
+      for (size_t i = 0; i < current_size; i++) {
+        std::construct_at(new_begin_ptr + i, begin_ptr[i]);
+      }
+      for (size_t i = 0; i < current_size; i++) {
+        std::destroy_at(begin_ptr + i);
+      }
+      alloc.deallocate(begin_ptr, max_size);
+      begin_ptr = new_begin_ptr;
+      max_size = n;
+    }
+    current_size = n;
   }
   vector(const vector &other) {
     max_size = other.max_size;

@@ -5,7 +5,7 @@
             "type": "lldb",
             "request": "launch",
             "name": "linux",
-            "program": "${workspaceFolder}/build/TicketSystem",
+            "program": "${workspaceFolder}/test/test",
             "args": [],
             "cwd": "${workspaceFolder}"
         }
