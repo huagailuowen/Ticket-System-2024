@@ -14,7 +14,7 @@ class BPlusTree {
     public:
     std::string file_name;
     std::fstream file;
-    sjtu::map<key_t,val_t>mp;
+    std::map<key_t,val_t>mp;
     BPlusTree(){}
     BPlusTree(std::string file_name,bool isnew=false):file_name(file_name){
         if(isnew==true){
@@ -82,7 +82,7 @@ class BPlusTree {
         int n=mp.size();
         file.write(reinterpret_cast<char*>(&n),sizeof(int));
         for(auto it=mp.begin();it!=mp.end();it++){
-            sjtu::pair<key_t,val_t> tmp=*it;
+            std::pair<key_t,val_t> tmp=*it;
             file.write(reinterpret_cast<char*>(&tmp.first),sizeof(key_t));
             file.write(reinterpret_cast<char*>(&tmp.second),sizeof(val_t));
         }
