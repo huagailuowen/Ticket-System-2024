@@ -6,6 +6,7 @@
 #include "mytype.hpp"
 #include<iostream>
 #include "../include/B_plustree.hpp"
+#include "../include/external_bpt.hpp"
 extern int TIME;
 const int MAXSTATIONNUM = 100;
 static const int BPlusTreeM=4, BPlusTreeL=4;
@@ -166,6 +167,13 @@ std::ostream &  operator <<  (std::ostream &os, const Train &train)
     os<<train.getSaleDate(0)<<" "<<train.getSaleDate(1)<<" "<<train.getType();
     return os;
 }
+class smalltrain{
+    unsigned int trainIDhash;
+    Mydate saleDate[2];
+    char type;
+    int stationNum;
+    int price[MAXSTATIONNUM];
+};
 class ReleasedTrain {
 #ifdef DEBUG
 public:
@@ -218,7 +226,7 @@ public:
 };
 std::ostream &  operator <<  (std::ostream &os, const ReleasedTrain &releasedTrain)
 {
-    os<<releasedTrain.getTrainID()<<" "<<releasedTrain.getDate()<<" "<<releasedTrain.getStationNum()<<"\n";
+    os<<releasedTrain.getTrainID()<<" "<<int_to_Date(releasedTrain.getDate())<<" "<<releasedTrain.getStationNum()<<"\n";
     for(int i=0;i<releasedTrain.getStationNum();i++)
     {
         os<<releasedTrain.getSeat(i)<<" ";
@@ -227,7 +235,9 @@ std::ostream &  operator <<  (std::ostream &os, const ReleasedTrain &releasedTra
 }
 class Trainsystem {
     sjtu::BPlusTree<TrainID_type, Train,  200,4>released_train,unreleased_train;
+    // sjtu::external_bpt<TrainID_type,Train,true>released_train,unreleased_train;
     sjtu::BPlusTree<sjtu::pair<Stationname_type, TrainID_type>, Train, 80,4>  station_train;
+
 public:
     Trainsystem ()=delete;
     Trainsystem(const Trainsystem &trainsystem)=delete;

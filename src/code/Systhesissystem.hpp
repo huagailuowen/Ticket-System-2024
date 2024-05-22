@@ -869,6 +869,7 @@ int Systhesissystem::buy_ticket(const Command &command,std::ostream &os){
     if(res==false)
         return os<<"-1"<<std::endl,-1;
     Train_sort train_sort;
+    // std::cerr<<TIME<<std::endl<<released_train<<std::endl;
     res=calculate_ticket(sjtu::make_pair(train,released_train),start_station,end_station,train_sort,true);
     if(res==false)
         return os<<"-1"<<std::endl,-1;

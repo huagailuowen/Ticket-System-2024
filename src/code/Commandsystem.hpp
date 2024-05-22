@@ -215,7 +215,6 @@ void Command::inputstring(const std::string &s) {
 extern string BUFFER;
 extern int status;
 class Commandsystem {
-    sjtu::vector<Command> commandList;
 public:
     Commandsystem() = default;
     void readcommand(Command& command)

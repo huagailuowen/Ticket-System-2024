@@ -26,3 +26,5 @@ test/
 tester/
 # Files starting with "testticket"
 testticket*
+testuser*
+maincoding

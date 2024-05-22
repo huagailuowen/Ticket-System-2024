@@ -116,17 +116,92 @@ std::ostream& operator <<(std::ostream &os,const Ticket &ticket){
     os<<"] "<<ticket.train_id<<" "<<ticket.startstation<<" "<<ticket.leavetime<<" -> "<<ticket.endstation<<" "<<ticket.arrivetime<<" "<<ticket.price<<" "<<ticket.seatnum;
     return os;
 }
+namespace sjtu{
+class release_bpt{
+    public:
+    const Mydate BEGIN_DATE;
+
+    struct release_block{
+        ReleasedTrain trains[92];
+        ReleasedTrain& operator[](const int &i){
+            return trains[i];
+        }
+        
+    };
+    
+    release_bpt()=delete;
+    release_bpt(const release_bpt &release_bpt)=delete;
+    release_bpt &operator=(const release_bpt &release_bpt)=delete;
+    sjtu::external_bpt<TrainID_type,release_block> data;
+    public:
+    release_block buffer;
+    release_bpt(std::string name,bool isnew=false):data(name,isnew),BEGIN_DATE(153,0){}
+    void insert(const Train& train,int begin_date,int end_date){
+        int begin_index=begin_date-BEGIN_DATE.day();
+        int end_index=end_date-BEGIN_DATE.day();
+        if(begin_index<0||end_index>91||begin_date>end_date) throw TrainSystemError("Invalid date");
+        release_block block;
+        ReleasedTrain released_train;
+        released_train.setTrainID(train.getTrainID());
+        released_train.setStationNum(train.getStationNum());
+        for(int j=0;j<(int)train.getStationNum()-1;j++){
+            released_train.setSeat(j,train.getSeatNum());
+        }
+        for(int i=begin_index;i<=end_index;i++){
+            released_train.setDate(i+BEGIN_DATE.day());
+            block[i]=released_train;
+        }
+        data.insert(train.getTrainID(),block);
+    }
+    bool search(const sjtu::pair<TrainID_type,int> &key,ReleasedTrain &released_train){
+        int index=key.second-BEGIN_DATE.day();
+        if(index<0||index>91) return false;
+        // bool res=data.search(key.first,buffer);
+        // std::cerr<<"----------------------\n";
+        // std::cerr<<(&buffer)<<std::endl;
+        bool res=data.search(key.first,buffer,index*sizeof(ReleasedTrain),index*sizeof(ReleasedTrain),sizeof(ReleasedTrain));
+        if(res==false) return false;
+        if(buffer[index].getTrainID()!=key.first) return false;
+        if(buffer[index].getDate()!=key.second) return false;
+        released_train=buffer[index];
+        
+        return true;
+    }
+    bool modify(const sjtu::pair<TrainID_type,int> &key,const ReleasedTrain &released_train){
+        int index=key.second-BEGIN_DATE.day();
+        if(key.second!=released_train.getDate()) throw TrainSystemError("Invalid date");
+        if(index<0||index>91) return false;
+        buffer[index]=released_train;
+        return data.modify(key.first,buffer,index*sizeof(ReleasedTrain),index*sizeof(ReleasedTrain),sizeof(ReleasedTrain));
+    }
+    void clear(){
+        data.clear();
+    }
+    // bool lower_bound(const sjtu::pair<TrainID_type,int> &key,ReleasedTrain &released_train){
+    //     int index=key.second-BEGIN_DATE.day();
+    //     bool res=data.search(key.first,buffer,index*sizeof(ReleasedTrain),0,sizeof(ReleasedTrain));
+    //     if(res==false) return false;
+    //     released_train=buffer[index];
+    //     return true;
+    // }
+
+};
+}
 class Ticketsystem{
 private:
 #ifdef DEBUG
 public:
 #endif
-    sjtu::BPlusTree<sjtu::pair<TrainID_type,int >, ReleasedTrain,200,8>released_train_info;
-    sjtu::BPlusTree<sjtu::pair<UserName_type,int>,Ticket,40,40> UserTicket;
+    // sjtu::BPlusTree<sjtu::pair<TrainID_type,int >, ReleasedTrain,200,8>released_train_info;
+    sjtu::release_bpt released_train_info;
+    // sjtu::BPlusTree<sjtu::pair<UserName_type,int>,Ticket,40,40> UserTicket;
+    sjtu::external_bpt<sjtu::pair<UserName_type,int>,Ticket>UserTicket;
     //用户可以在同一时间下单吗？？？
     //int 代表时间
-    sjtu::BPlusTree<sjtu::pair<sjtu::pair<TrainID_type,int>,sjtu::pair<UserName_type,int>>, Ticket,80,40>ticket_queue;
-    sjtu::BPlusTree<UserName_type,int,80,400>order_num;
+    // sjtu::BPlusTree<sjtu::pair<sjtu::pair<TrainID_type,int>,sjtu::pair<UserName_type,int>>, Ticket,80,40>ticket_queue;
+    sjtu::external_bpt<sjtu::pair<sjtu::pair<TrainID_type,int>,sjtu::pair<UserName_type,int>>, Ticket>ticket_queue;
+    // sjtu::BPlusTree<UserName_type,int,80,400>order_num;
+    sjtu::external_map<UserName_type,int>order_num;
     Trainsystem trainsystem;
 public:
     Ticketsystem()=delete;
@@ -160,19 +235,21 @@ public:
         if(res==false) return false;
         Train train;
         trainsystem.find_train(trainID,train,1);
-        ReleasedTrain releasedTrain_tmp;
-        releasedTrain_tmp.setTrainID(trainID);
-        releasedTrain_tmp.setStationNum(train.getStationNum());
-        Mydate curdate;
-        for(int i=0;i<train.getStationNum()-1;i++){
-            //there must minus one because the last station is the terminal station
-            releasedTrain_tmp.setSeat(i,train.getSeatNum());
-        }
-        for(int i=train.getSaleDate(0);i<=train.getSaleDate(1);i++){
-            //端点？？？？
-            releasedTrain_tmp.setDate(i);
-            released_train_info.insert(sjtu::make_pair(trainID,i),releasedTrain_tmp);
-        }
+        // ReleasedTrain releasedTrain_tmp;
+        // releasedTrain_tmp.setTrainID(trainID);
+        // releasedTrain_tmp.setStationNum(train.getStationNum());
+        // Mydate curdate;
+        // for(int i=0;i<train.getStationNum()-1;i++){
+        //     //there must minus one because the last station is the terminal station
+        //     releasedTrain_tmp.setSeat(i,train.getSeatNum());
+        // }
+        // for(int i=train.getSaleDate(0);i<=train.getSaleDate(1);i++){
+        //     //端点？？？？
+        //     releasedTrain_tmp.setDate(i);
+        //     released_train_info.insert(sjtu::make_pair(trainID,i),releasedTrain_tmp);
+        // }
+
+        released_train_info.insert(train,train.getSaleDate(0),train.getSaleDate(1));
         //i do not detect if ir
         return true;
     }
@@ -244,9 +321,13 @@ public:
             //     std::cerr<<int_to_Date(daydate)<<std::endl;
             //     std::cerr<<int_to_Date(train.getSaleDate(0))<<" "<<int_to_Date(train.getSaleDate(1))<<std::endl;
             // }
-            bool res=released_train_info.lower_bound(sjtu::make_pair(train.getTrainID(),daydate),released_train);
-            if(res==false) return false;
-            if(released_train.getTrainID()!=train.getTrainID()) return false;
+            
+            if(train.getSaleDate(1)<daydate)return false;
+            if(train.getSaleDate(0)>daydate)
+                daydate=train.getSaleDate(0);
+            bool res=released_train_info.search(sjtu::make_pair(train.getTrainID(),daydate),released_train);
+            if(res==false) throw TrainSystemError("Impossible Invalid train");
+            if(released_train.getTrainID()!=train.getTrainID()) throw TrainSystemError("Impossible Invalid train");
             // if(TIME==379506&&train.getTrainID()==TrainID_type("aparadoxappearsth")
             // &&station==Stationname_type("北京市")) {
             //     std::cerr<<":::::::::::::::::::::::::::::::::::\n";

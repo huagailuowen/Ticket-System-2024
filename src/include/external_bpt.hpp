@@ -6,7 +6,7 @@
 #include "../include/external_array.hpp"
 #include "../include/external_map.hpp"
 namespace sjtu{
-template <class key_t,class val_t,int M,int L>
+template <class key_t,class val_t,bool is_hash=false>
 class external_bpt {
     std::string file_name;
     public:
@@ -28,12 +28,27 @@ class external_bpt {
         data.read(val,pos);
         return true;
     }
+    bool search(const key_t &key,val_t &val,int offset1,int offset2,int len){
+        int pos;
+        if(index.search(key,pos)==false)return false;
+        data.read(val,pos,offset1,offset2,len);
+        return true;
+    }
+    
+
     bool modify(const key_t &key,const val_t &val){
         int pos;
         if(index.search(key,pos)==false)return false;
         data.write(val,pos);
         return true;
     }
+    bool modify(const key_t &key,const val_t &val,int offset1,int offset2,int len){
+        int pos;
+        if(index.search(key,pos)==false)return false;
+        data.write(val,pos,offset1,offset2,len);
+        return true;
+    }
+    
     void clear(){
         index.clear();
         data.clear();

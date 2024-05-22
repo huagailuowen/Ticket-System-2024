@@ -127,7 +127,7 @@ class external_array {
             // file.write(reinterpret_cast<const char*>(&cfg.filesize),sizeof(size_t));
         }
         file.seekp(repos);
-        file.write(reinterpret_cast<const char*>(&a)+offset2,len);
+        file.write((reinterpret_cast<const char*>(&a))+offset2,len);
         file.close();
     }
     void read(T &a,int pos){
@@ -165,11 +165,9 @@ class external_array {
                 file.write(buffer,incrsize);
                 cfg.filesize+=incrsize;
             }
-            // file.seekp(0);
-            // file.write(reinterpret_cast<const char*>(&cfg.filesize),sizeof(size_t));
         }
         file.seekg(repos);
-        file.read(reinterpret_cast<char*>(&a)+offset2,len);
+        file.read((reinterpret_cast<char*>(&a))+offset2,len);
         file.close();
     }
     
