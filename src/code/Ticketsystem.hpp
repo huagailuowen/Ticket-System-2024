@@ -226,17 +226,18 @@ public:
         if(station_index==-1||station_index+1==train.getStationNum()) return false;
         //不走终点站
         if(havetobethatday==true){
-            //不是换车的情况，date.time==0
-            if(date.time!=0)throw   TrainSystemError("Invalid date,not transfering");
+            //不是换车的情况，date.time()==0
+            if(date.time()!=0)throw   TrainSystemError("Invalid date,not transfering");
             //这里不是arrivetime，而是leavetime吧？？
             Mydate tmp=train.getleavetime(station_index);
-            int takedays=tmp.day;
-            return released_train_info.search(sjtu::make_pair(train.getTrainID(),date.day-takedays),released_train);
+            int takedays=tmp.day();
+            if(date.day()-takedays<train.getSaleDate(0)||date.day()-takedays>train.getSaleDate(1)) return false;
+            return released_train_info.search(sjtu::make_pair(train.getTrainID(),date.day()-takedays),released_train);
         }else{
             Mydate curstartdate=date-(train.getleavetime(station_index)-train.getleavetime(0));
             //始发时间>=curstartdate
-            int daydate=curstartdate.day;
-            if(curstartdate.time>train.getStartTime()) daydate++;
+            int daydate=curstartdate.day();
+            if(curstartdate.time()>train.getStartTime()) daydate++;
             // if(TIME==379506&&train.getTrainID()==TrainID_type("aparadoxappearsth")
             // &&station==Stationname_type("北京市")) {
             //     std::cerr<<":::::::::::::::::::::::::::::::::::\n";

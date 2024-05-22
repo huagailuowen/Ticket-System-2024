@@ -54,15 +54,14 @@ enum class command_type {
   inanity,
 };
 const int Month_day[13] = {0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+const int Month_sum[13] = {0, 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305,
+                           335};
 int Date_to_int(std::string date) {
   int year = 2024;
   int month, day;
   sscanf(date.c_str(), "%d-%d", &month, &day);
   int days = 0;
-  for (int i = 1; i < month; i++) {
-    days += Month_day[i];
-  }
-  days += day;
+  days=Month_sum[month]+day;
   return days;
 }
 int time_to_int(const std::string &time) {
@@ -100,38 +99,36 @@ std::string int_to_time(int time) {
   return t;
 }
 struct Mydate {
-  int day, time;
-  Mydate() {day=0;time=0;}
+  // int day, time;
+  int date;
+  Mydate() {date=0;}
+  int day() const { return date / 1440; }
+  int time() const { return date % 1440; }
+  Mydate(int date){this->date=date;}
   Mydate(int d, int t) {
-    day = d + t / 1440;
-    time = t % 1440;
-    if (time < 0) {
-      time += 1440;
-      day--;
-    }
+    date=d*1440+t;
   }
-  Mydate(const Mydate& a):day(a.day),time(a.time){}
+  Mydate(const Mydate& a):date(a.date){}
   Mydate(const std::string &date, const std::string &time)
-      : day(Date_to_int(date)), time(time_to_int(time)) {}
+  {
+    this->date=Date_to_int(date)*1440+time_to_int(time);
+  }
   Mydate& operator=(const Mydate& a) {
-    if (this != &a) {
-      day = a.day;
-      time = a.time;
-    }
+    date=a.date;
     return *this;
   }
   Mydate operator+(const Mydate &a)const {
-    return Mydate(day + a.day, time + a.time);
+    return Mydate(date + a.date);
   }
   Mydate operator-(const Mydate &a)const {
-    return Mydate(day - a.day, time - a.time);
+    return Mydate(date - a.date);
   }
   static Mydate max() { return Mydate(100000, 0); }
-  operator std::string() const { return int_to_Date(day) + " " + int_to_time(time); }
-  operator int () const { return day * 1440 + time; }
+  operator std::string() const { return int_to_Date(date/1440) + " " + int_to_time(date%1440); }
+  operator int () const { return date; }
 };
 std::ostream &operator<<(std::ostream &os, const Mydate &a) {
-  os << int_to_Date(a.day) << " " << int_to_time(a.time);
+  os << std::string(a);
   return os;
 }
 template <class T>
@@ -152,6 +149,66 @@ int splittos(const std::string &str, T *res, const char &token) {
 }
 // template <class T>
 void splittoi(const std::string &str, int *res, const char &token,
+              int isdate_time = 0)
+// isdate_time=0 means int,1 means date,2 means time
+{
+  int len = str.length();
+  int cnt = 0;
+  int last = 0;
+  for (int i = 0; i < len; i++) {
+    if (str[i] == token) {
+      if (isdate_time == 1)
+        res[cnt++] = Date_to_int(str.substr(last, i - last));
+      else if (isdate_time == 2)
+        res[cnt++] = time_to_int(str.substr(last, i - last));
+      else
+        // res[cnt++] = T(str.substr(last, i - last));
+        sscanf(str.substr(last, i - last).c_str(), "%d", &res[cnt++]);
+      last = i + 1;
+    }
+  }
+  // res[cnt++] = T(str.substr(last, len - last));
+  if(len-last>0){
+    if (isdate_time == 1)
+      res[cnt++] = Date_to_int(str.substr(last, len - last));
+    else if (isdate_time == 2)
+      res[cnt++] = time_to_int(str.substr(last, len - last));
+    else
+      sscanf(str.substr(last, len - last).c_str(), "%d", &res[cnt++]);
+  
+  }
+}
+void splittoshort(const std::string &str, short *res, const char &token,
+              int isdate_time = 0)
+// isdate_time=0 means int,1 means date,2 means time
+{
+  int len = str.length();
+  int cnt = 0;
+  int last = 0;
+  for (int i = 0; i < len; i++) {
+    if (str[i] == token) {
+      if (isdate_time == 1)
+        res[cnt++] = Date_to_int(str.substr(last, i - last));
+      else if (isdate_time == 2)
+        res[cnt++] = time_to_int(str.substr(last, i - last));
+      else
+        // res[cnt++] = T(str.substr(last, i - last));
+        sscanf(str.substr(last, i - last).c_str(), "%d", &res[cnt++]);
+      last = i + 1;
+    }
+  }
+  // res[cnt++] = T(str.substr(last, len - last));
+  if(len-last>0){
+    if (isdate_time == 1)
+      res[cnt++] = Date_to_int(str.substr(last, len - last));
+    else if (isdate_time == 2)
+      res[cnt++] = time_to_int(str.substr(last, len - last));
+    else
+      sscanf(str.substr(last, len - last).c_str(), "%d", &res[cnt++]);
+  
+  }
+}
+void splittodate(const std::string &str, Mydate *res, const char &token,
               int isdate_time = 0)
 // isdate_time=0 means int,1 means date,2 means time
 {

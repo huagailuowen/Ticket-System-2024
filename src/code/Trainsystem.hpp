@@ -20,8 +20,8 @@ public:
     int seatNum;
     int price[MAXSTATIONNUM];
     int startTime;
-    int travelTime[MAXSTATIONNUM];
-    int stopoverTime[MAXSTATIONNUM];
+    // int travelTime[MAXSTATIONNUM];
+    short stopoverTime[MAXSTATIONNUM];
     Mydate arrivetime[MAXSTATIONNUM];
     int saleDate[2];
     char type;
@@ -32,7 +32,7 @@ public:
         for (int i = 0; i < stationNum; i++) {
             this->station[i] = station[i];
             this->price[i] = price[i];
-            this->travelTime[i] = travelTime[i];
+            // this->travelTime[i] = travelTime[i];
             this->stopoverTime[i] = stopoverTime[i];
 
         }
@@ -45,7 +45,7 @@ public:
         for (int i = 0; i < stationNum; i++) {
             station[i] = other.station[i];
             price[i] = other.price[i];
-            travelTime[i] = other.travelTime[i];
+            // travelTime[i] = other.travelTime[i];
             stopoverTime[i] = other.stopoverTime[i];
             arrivetime[i] = other.arrivetime[i];
         }
@@ -65,7 +65,7 @@ public:
         for (int i = 0; i < stationNum; i++) {
             station[i] = other.station[i];
             price[i] = other.price[i];
-            travelTime[i] = other.travelTime[i];
+            // travelTime[i] = other.travelTime[i];
             stopoverTime[i] = other.stopoverTime[i];
             arrivetime[i] = other.arrivetime[i];
         }
@@ -82,7 +82,7 @@ public:
     int getSeatNum() const { return seatNum; }
     int getPrice(int i) const { return price[i]; }
     int getStartTime() const { return startTime; }
-    int getTravelTime(int i) const { return travelTime[i]; }
+    // int getTravelTime(int i) const { return travelTime[i]; }
     int getStopoverTime(int i) const { return stopoverTime[i]; }
     int getSaleDate(int i) const { return saleDate[i]; }
     char getType() const { return type; }
@@ -92,19 +92,20 @@ public:
     void setSeatNum(int seatNum) { this->seatNum = seatNum; }
     void setPrice(int i, int price) { this->price[i] = price; }
     void setStartTime(int startTime) { this->startTime = startTime; }
-    void setTravelTime(int i, int travelTime) { this->travelTime[i] = travelTime; }
+    // void setTravelTime(int i, int travelTime) { this->travelTime[i] = travelTime; }
     void setStopoverTime(int i, int stopoverTime) { this->stopoverTime[i] = stopoverTime; }
     void setSaleDate(int i, int saleDate) { this->saleDate[i] = saleDate; }
     void setType(char type) { this->type = type; }
     void setarrivetime(int i, Mydate arrivetime) { this->arrivetime[i] = arrivetime; }
-    Mydate getarrivetime(int i) const { return this->arrivetime[i]; }
+    Mydate getarrivetime(int i) const { if(i>=stationNum)return 0;return this->arrivetime[i]; }
     void updatearrivetime()
     {
         Mydate tmp = Mydate(0,startTime);
         for (int i = 0; i < stationNum; i++)
         {
-            arrivetime[i] = tmp;
-            if(i+1<stationNum)tmp = tmp + Mydate(0,travelTime[i]);
+            Mydate cur=tmp;
+            if(i+1<stationNum)tmp = tmp + Mydate(0,arrivetime[i]);
+            arrivetime[i] = cur;
             if (i!=0&&i+1< stationNum )
                 tmp = tmp + Mydate(0,stopoverTime[i-1]);
         }
@@ -126,11 +127,11 @@ public:
     }
     void setTravelTime(const std::string &input)
     {
-        splittoi(input, travelTime, '|');
+        splittodate(input, arrivetime, '|');
     }
     void setStopoverTime(const std::string &input)
     {
-        splittoi(input, stopoverTime, '|');
+        splittoshort(input, stopoverTime, '|');
     }
     void setSaleDate(const std::string &input)
     {
@@ -153,7 +154,7 @@ std::ostream &  operator <<  (std::ostream &os, const Train &train)
     os<<train.getStartTime()<<" ";
     for(int i=0;i<train.getStationNum();i++)
     {
-        os<<train.getTravelTime(i)<<" ";
+        os<<train.getarrivetime(i)<<" ";
     }
     for(int i=0;i<train.getStationNum();i++)
     {

@@ -336,7 +336,8 @@ int Systhesissystem::query_train(const Command  &command,std::ostream &os){
         return os<<"-1"<<std::endl,-1;
     os<<train.getTrainID()<<" "<<train.getType()<<std::endl;
     int price=0;
-    Mydate curdate(released_train.getDate(),train.getStartTime());
+    int begin_day=released_train.getDate();
+    Mydate curdate(begin_day,train.getStartTime());
     for(int i=0;i<train.getStationNum();i++){
         os<<train.getStation(i)<<" ";
         if(i==0){
@@ -355,9 +356,9 @@ int Systhesissystem::query_train(const Command  &command,std::ostream &os){
         else{
             os<<curdate;
         } 
-        if(i+1<train.getStationNum()){
-            curdate=curdate+Mydate(0,train.getTravelTime(i));
-        }
+        
+        curdate=Mydate(begin_day,train.getarrivetime(i+1));
+        
         os<<" "<<price<<" ";
         if(i+1==train.getStationNum()){
             os<<"x";
@@ -704,8 +705,11 @@ int Systhesissystem::query_transfer(const Command &command,std::ostream &os){
             if(i.first.getStation(j)==start_station){
                 sjtu::pair<int, sjtu::pair<int,int>>hint(0,sjtu::make_pair(0,1000000));
                 for(int k=j+1;k<i.first.getStationNum();k++){
-                    if(i.first.getStation(k)==end_station)
+                    if(i.first.getStation(k)==end_station){
+                        hint.second.first+=i.first.getPrice(k-1);
+                        hint.second.second=std::min(hint.second.second,i.second.getSeat(k-1));
                         continue;
+                    }
                     Train_sort train_sort;
                     Stationname_type transfer_station=i.first.getStation(k);
                     bool res=calculate_ticket(i,j,k,train_sort,hint);
@@ -851,10 +855,11 @@ int Systhesissystem::buy_ticket(const Command &command,std::ostream &os){
     auto it=Userlist.find(cur_user);
     if(it==Userlist.end())
         return os<<"-1"<<std::endl,-1;
-    User user;
-    bool res=usersystem.find_user(cur_user,user);
-    if(res==false)
-        return os<<"-1"<<std::endl,-1;
+    bool res=false;
+    // User user;
+    // bool res=usersystem.find_user(cur_user,user);
+    // if(res==false)
+    //     return os<<"-1"<<std::endl,-1;
     Train train;
     ReleasedTrain released_train;
     res=ticketsystem.query_train(trainID,train);
@@ -873,6 +878,9 @@ int Systhesissystem::buy_ticket(const Command &command,std::ostream &os){
     //     std::cerr<<train_sort<<std::endl;
     //     std::cerr<<ticket_num<<std::endl;
     // }
+    if(ticket_num>train.getSeatNum()){
+        return os<<"-1"<<std::endl,-1;
+    }
     if(train_sort.getSeat()<ticket_num){
         if(is_queue){
             os<<"queue"<<std::endl;
@@ -885,7 +893,7 @@ int Systhesissystem::buy_ticket(const Command &command,std::ostream &os){
     }else{
         os<<train_sort.getPrice()*ticket_num<<std::endl;
         {
-            assert(train_sort.getLeavingTime().day==date_day);
+            assert(train_sort.getLeavingTime().day()==date_day);
             int id=-1;
             for(int i=0;i<train.getStationNum();i++){
                 if(train.getStation(i)==start_station){
@@ -936,7 +944,7 @@ int Systhesissystem::query_order(const Command &command,std::ostream &os){
 }
 int Systhesissystem::refund_ticket(const Command &command,std::ostream &os){
     if(command.type!=command_type::refund_ticket)
-        throw TrainSystemError("refund_ticket");
+        throw TrainSystemError("callrefund_ticket");
     UserName_type cur_username;
     int index;
     for(int i=0;i<command.auguementNum;i++){
@@ -945,7 +953,7 @@ int Systhesissystem::refund_ticket(const Command &command,std::ostream &os){
         }else if(command.key[i]=='n'){
             index=std::stoi(command.auguement[i]);
         }else{
-            throw TrainSystemError("refund_ticket");
+            throw TrainSystemError("callrefund_ticket");
         }
     }
     auto it=Userlist.find(cur_username);
@@ -956,8 +964,8 @@ int Systhesissystem::refund_ticket(const Command &command,std::ostream &os){
         return os<<"-1"<<std::endl,-1;
     bool res=ticketsystem.refund_ticket(cur_username,index);
     if(res==false)
-        throw TrainSystemError("refund_ticket");
-        // return os<<"-1"<<std::endl,-1;
+        // throw TrainSystemError("haharefund_ticket");
+        return os<<"-1"<<std::endl,-1;
     return os<<'0'<<std::endl,0;
 }
 
@@ -994,16 +1002,18 @@ void Systhesissystem::process()
         TIME=cmd.timestamp;
         os<<'['<<cmd.timestamp<<']'<<' ';
         // std::cerr<<"m";
-        // if(TIME>=21580&&TIME<=21599){
+        // if(TIME==750566){
         //     ReleasedTrain released_train;
         //     Train train;
         //     bool res;
-        //     res=ticketsystem.query_train(TrainID_type("LeavesofGrass"),train);
-        //     if(!res)goto K;
-        //     res=ticketsystem.getreleasedtrain_bytrain(train,Stationname_type("黑龙江省海林市"),Mydate(Date_to_int("06-28"),0),released_train,true);
+        //     res=ticketsystem.query_train(TrainID_type("AndIwillmakeaso"),train);
+        //     if(!res)std::cerr<<"&&&&&&&&&&\n";
+            
+        //     res=ticketsystem.getreleasedtrain_bytrain(train,Stationname_type("北京市"),Mydate(Date_to_int("06-29"),0),released_train,true);
         //     std::cerr<<'['<<cmd.timestamp<<']'<<std::endl;
+        //     std::cerr<<train<<std::endl;
         //     std::cerr<<released_train<<std::endl;
-        //     K:;
+        //     // K:;
         // }
         
         switch (cmd.type)
