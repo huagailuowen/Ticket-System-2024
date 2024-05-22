@@ -7,7 +7,8 @@
 *.dylib
 *.dll
 *.log
-
+.vscode/
+.cache/
 # Executables
 *.exe
 *.in
