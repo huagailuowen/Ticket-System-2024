@@ -15,7 +15,7 @@ include_directories(include)
 # Add the source files
 file(GLOB SOURCES "src/code/*.cpp")
 # Add the executable
-add_executable(TicketSystem ${SOURCES})
+add_executable(code ${SOURCES})
 # cmake_minimum_required(VERSION 3.12)
 # project(TicketSystem)
 
