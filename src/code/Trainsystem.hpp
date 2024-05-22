@@ -76,8 +76,10 @@ public:
         type = other.type;
         return *this;
     }
+    TrainID_type& getTrainID() { return trainID; }
     TrainID_type getTrainID() const { return trainID; }
     int getStationNum() const { return stationNum; }
+    Stationname_type& getStation(int i) { return station[i]; }
     Stationname_type getStation(int i) const { return station[i]; }
     int getSeatNum() const { return seatNum; }
     int getPrice(int i) const { return price[i]; }

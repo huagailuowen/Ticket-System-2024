@@ -1,0 +1,3 @@
+/home/luowen/myproject/Ticket-System-2024/CMakeFiles/code.dir
+/home/luowen/myproject/Ticket-System-2024/CMakeFiles/edit_cache.dir
+/home/luowen/myproject/Ticket-System-2024/CMakeFiles/rebuild_cache.dir
