@@ -7,7 +7,7 @@
 #include <string>
 #include <algorithm>
 #include <utility> // Include the <utility> header file
-
+#include <vector>
 #include "Commandsystem.hpp"
 #include "Ticketsystem.hpp"
 #include "Trainsystem.hpp"
@@ -616,7 +616,7 @@ int Systhesissystem::query_transfer(const Command &command,std::ostream &os){
 // 感觉现在算法有一些问题
 // 在以时间作为优先级上;
     sjtu::pair<Train_sort,Train_sort>res={Train_sort(),Train_sort()};
-    auto checkmin=[&res,is_priority_time](const Train_sort&cur_first,const Train_sort&cur_second)->void
+    auto checkmin=[this,&res,is_priority_time](const Train_sort&cur_first,const Train_sort&cur_second)->void
     {
         if(res.first.getTrainID()==TrainID_type()){
             res.first=cur_first;
@@ -630,15 +630,25 @@ int Systhesissystem::query_transfer(const Command &command,std::ostream &os){
         // int pricecur=cur.first.getPrice()+cur.second.getPrice();
         int pricecur=cur_first.getPrice()+cur_second.getPrice();
         if(is_priority_time){
-            if(priceres!=pricecur){
-                if(priceres>pricecur){
+            // if(TIME==379506){
+            //     if(cur_first.getTrainID()==TrainID_type("INCABINDSHIPSAT")&&cur_second.getTrainID()==TrainID_type("aparadoxappearsth")){
+            //         Train train;
+            //         ReleasedTrain released_train;
+            //         ticketsystem.query_train(cur_first.getTrainID(),cur_first.getLeavingTime().day,train,released_train);
+            //         std::cerr<<train<<std::endl;
+            //     }
+            //     std::cerr<<"----------------------------------\n";
+            //     std::cerr<<timeres<<" "<<timecur<<" "<<priceres<<" "<<pricecur<<std::endl;
+            // }
+            if(timeres!=timecur){
+                if(timeres>timecur){
                     res.first=cur_first;
                     res.second=cur_second;
                 }
                 return;
             }
-            if(timeres!=timecur){
-                if(timeres>timecur){
+            if(priceres!=pricecur){
+                if(priceres>pricecur){
                     res.first=cur_first;
                     res.second=cur_second;
                 }
@@ -659,15 +669,15 @@ int Systhesissystem::query_transfer(const Command &command,std::ostream &os){
                 return ;
             }
         }else{
-            if(timeres!=timecur){
-                if(timeres>timecur){
+            if(priceres!=pricecur){
+                if(priceres>pricecur){
                     res.first=cur_first;
                     res.second=cur_second;
                 }
                 return;
             }
-            if(priceres!=pricecur){
-                if(priceres>pricecur){
+            if(timeres!=timecur){
+                if(timeres>timecur){
                     res.first=cur_first;
                     res.second=cur_second;
                 }
@@ -700,6 +710,7 @@ int Systhesissystem::query_transfer(const Command &command,std::ostream &os){
                     Stationname_type transfer_station=i.first.getStation(k);
                     bool res=calculate_ticket(i,j,k,train_sort,hint);
                     hint.second.first+=i.first.getPrice(k-1);
+                    hint.second.second=std::min(hint.second.second,i.second.getSeat(k-1));
                     if(!res)
                         continue;
                         // if(best_train[0].find(i.first.getStation(k))==best_train[0].end()){
@@ -713,17 +724,51 @@ int Systhesissystem::query_transfer(const Command &command,std::ostream &os){
                         //         best_train[1][i.first.getStation(k)]=train_sort;
                         //     }
                         // }
+                    // std::vector<sjtu::pair<Train,ReleasedTrain>>possible_train2;
                     Mydate transfer_time=train_sort.getArrivingTime();
+                    // bool is_debug=false;
+                    // if(TIME==379506){
+                    //     if(i.first.getTrainID()==TrainID_type("INCABINDSHIPSAT")&&i.first.getStation(k)==Stationname_type("北京市")){
+                    //         is_debug=true;
+                    //     }
+                    // }
                     ticketsystem.getalltrain_bystation_time(i.first.getStation(k),transfer_time,possible_train2,false);
+                    // if(is_debug){
+                    //     std::cerr<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1\n";
+                    //     std::cerr<<possible_train2.size()<<std::endl;
+                    // }
                     Train_sort train_sort2;
+                    // if(TIME==379506){
+                    //     if(i.first.getTrainID()==TrainID_type("INCABINDSHIPSAT")&&i.first.getStation(k)==Stationname_type("北京市")){
+                    //         Train train;
+                    //         ReleasedTrain released_train;
+                    //         ticketsystem.query_train(TrainID_type("aparadoxappearsth"),i.second.getDate(),train,released_train);
+                    //         std::cerr<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1\n";
+                    //         std::cerr<<transfer_time<<std::endl;
+                    //         std::cerr<<train<<std::endl;
+                    //     }
+                    // }
+                    // int cnt=0;
                     for(auto &ii:possible_train2){
+                        
+                        // cnt++;
+                            // if(is_debug){
+                            //     std::cerr<<ii.first.getTrainID()<<std::endl;
+                            //     // if(ii.first.getTrainID()==TrainID_type("aparadoxappearsth"))
+                            //     //     std::cerr<<"AHAHHAHAHAHAHAHAHAHAHAHHA\n"<<ii.first.getTrainID()<<std::endl;
+                            // }
+                        
                         if(ii.first.getTrainID()==i.first.getTrainID())
                             continue;
                         if(!calculate_ticket(ii,transfer_station,end_station,train_sort2,true))
                             continue;
+                        
                         checkmin(train_sort,train_sort2);
-                        break;
+                        // break;   fuck  FUUUUUCKKKKKKK
                     }
+                    // if(is_debug){
+                    //     std::cerr<<cnt<<"}}}}}}}}}}}}}"<<std::endl;
+                    // }
                 }
                 break;
             }

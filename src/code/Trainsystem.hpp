@@ -144,11 +144,11 @@ std::ostream &  operator <<  (std::ostream &os, const Train &train)
     for(int i=0;i<train.getStationNum();i++)
     {
         os<<train.getStation(i)<<" ";
+        os<<train.getPrice(i)<<" ";
     }
     os<<train.getSeatNum()<<" ";
     for(int i=0;i<train.getStationNum();i++)
     {
-        os<<train.getPrice(i)<<" ";
     }
     os<<train.getStartTime()<<" ";
     for(int i=0;i<train.getStationNum();i++)

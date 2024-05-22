@@ -10,6 +10,7 @@
 
 # Executables
 *.exe
+*.in
 *.out
 
 # Build directories

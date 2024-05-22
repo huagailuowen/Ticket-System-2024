@@ -212,6 +212,8 @@ void Command::inputstring(const std::string &s) {
     }
     this->auguementNum = this->auguement.size(); // Set the auguementNum
 }
+extern string BUFFER;
+extern int status;
 class Commandsystem {
     sjtu::vector<Command> commandList;
 public:
@@ -220,6 +222,15 @@ public:
     {
         // char s[1000];
         string s;
+        // if(status==0)
+        // {
+        //     s=BUFFER;
+        //     status=1;
+        // }
+        // else{
+        //     status=0;
+        //     std::getline(std::cin,s);    
+        // }
         std::getline(std::cin,s);    
         command.inputstring(s);
         return;

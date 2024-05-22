@@ -4,7 +4,8 @@
 // #include"easyinclude.hpp"
 #include"Trainsystem.hpp"
 #include "mytype.hpp"
-// #include <climits>
+#include <utility>
+#include <ctime>
 #include <iostream>
 extern int TIME;
 class Ticket{
@@ -236,15 +237,27 @@ public:
             //始发时间>=curstartdate
             int daydate=curstartdate.day;
             if(curstartdate.time>train.getStartTime()) daydate++;
+            // if(TIME==379506&&train.getTrainID()==TrainID_type("aparadoxappearsth")
+            // &&station==Stationname_type("北京市")) {
+            //     std::cerr<<":::::::::::::::::::::::::::::::::::\n";
+            //     std::cerr<<int_to_Date(daydate)<<std::endl;
+            //     std::cerr<<int_to_Date(train.getSaleDate(0))<<" "<<int_to_Date(train.getSaleDate(1))<<std::endl;
+            // }
             bool res=released_train_info.lower_bound(sjtu::make_pair(train.getTrainID(),daydate),released_train);
             if(res==false) return false;
-            //找不到了
             if(released_train.getTrainID()!=train.getTrainID()) return false;
+            // if(TIME==379506&&train.getTrainID()==TrainID_type("aparadoxappearsth")
+            // &&station==Stationname_type("北京市")) {
+            //     std::cerr<<":::::::::::::::::::::::::::::::::::\n";
+            //     std::cerr<<int_to_Date(daydate)<<std::endl;
+            //     std::cerr<<int_to_Date(train.getSaleDate(0))<<" "<<int_to_Date(train.getSaleDate(1))<<std::endl;
+            // }
+            //找不到了
             return true;
         }
     
     }
-    void getalltrain_bystation_time(const Stationname_type &station,const Mydate &date,sjtu::vector<sjtu::pair<Train,ReleasedTrain>> &trains,bool havetobethatday=true){
+    void getalltrain_bystation_time(const Stationname_type &station,const Mydate &date,sjtu::vector<sjtu::pair<Train,ReleasedTrain>> &trains,bool havetobethatday=true,bool is_debug=false){
         sjtu::vector<Train> possible_train;
         trains.clear();
         getalltrain_bystation(station,possible_train);
@@ -252,10 +265,26 @@ public:
         for(auto &i:possible_train){
             //&加速
             //可以不用get函数调用来加速
-            if(getreleasedtrain_bytrain(i,station,date,released_train,havetobethatday)==false) continue;
+            if(getreleasedtrain_bytrain(i,station,date,released_train,havetobethatday)==false) 
+                continue;
             trains.push_back(sjtu::make_pair(i,released_train));
+            // if(is_debug&&TIME==379506&&trains.back().first.getTrainID()==TrainID_type("aparadoxappearsth")
+            // &&station==Stationname_type("北京市")&&date==Mydate(Date_to_int("07-27"),time_to_int("17:42"))){
+            //     std::cerr<<"$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n";
+            //     std::cerr<<trains.back().first.getTrainID()<<std::endl;
+            //     std::cerr<<trains.back().second.getTrainID()<<std::endl;
+            // }
+            // if(is_debug){
+            //     // std::cerr<<"#############################\n";
+            //     std::cerr<<trains.back().first.getTrainID()<<std::endl;
+            //     // std::cerr<<trains.back().second.getTrainID()<<std::endl;
+            // }
             
         }
+        // if(is_debug){
+        //     std::cerr<<trains.size()<<std::endl;
+        //     std::cerr<<"#############################\n";
+        // }
     }
     bool buy_ticket(const TrainID_type& trainID,const Stationname_type& startstation,const Stationname_type& endstation,const Train&train,ReleasedTrain released_train,const UserName_type& user_name,const int price,const int& num,const int& timestamp){
         int start_station_num=-1;
@@ -318,15 +347,14 @@ public:
         for(int i=0;i<train.getStationNum();i++){
             if(train.getStation(i)==ticket.getStartStation()) start_station_num=i;
             if(train.getStation(i)==ticket.getEndStation()) {end_station_num=i;break;}
-            curseatnum=std::min(curseatnum,released_train.getSeat(i));
+            if(start_station_num!=-1)curseatnum=std::min(curseatnum,released_train.getSeat(i));
         }
         if(start_station_num==-1||end_station_num==-1) throw TrainSystemError("trybuy_No such station");
         // std::cerr<<"AHAHHAHAHAHAHA"<<std::endl;
-        
         // std::cerr<<"!!!"<<curseatnum<<" "<<ticket.getSeatNum()<<std::endl;
         if(curseatnum<ticket.getSeatNum()) return false;
-        std::cerr<<"-------------------------------------------\n";
-        std::cerr<<ticket<<std::endl;
+        // std::cerr<<"-------------------------------------------\n";
+        // std::cerr<<ticket<<std::endl;
 
         for(int i=start_station_num;i<end_station_num;i++){
             released_train.setSeat(i,released_train.getSeat(i)-ticket.getSeatNum());
@@ -388,6 +416,8 @@ public:
         sjtu::make_pair(sjtu::make_pair(trainID,INT_MAX),  sjtu::make_pair(UserName_type::setmax(),INT_MAX)),tickets);
         // sjtu::vector<sjtu::pair<UserName_type,int>>delete_tickets;
         for(auto &i:tickets){
+
+            
             if(i.getTicketType()!=Ticket::TicketType::pending) throw TrainSystemError("Invalid ticket");
             try_buy_ticket(i.getUserName(),i.getOrderNum(),i);
         }

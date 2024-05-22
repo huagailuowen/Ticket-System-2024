@@ -1,10 +1,17 @@
 // #define DEBUG
 // #define FAST
+#include<string>
+int status=0;
+std::string BUFFER="[0] query_train -d 06-28 -i LeavesofGrass";
 #include"Systhesissystem.hpp"
 #include "mytype.hpp"
 #include <cstdio>
 extern int TIME;
 int main() {
+    // freopen("test.in","r",stdin);
+    // freopen("testmy.out","w",stdout);
+    std::ios::sync_with_stdio(false); // Disable synchronization between C and C++ standard streams
+    std::cin.tie(nullptr); // Unbind cin from cout
     std::string systemname="test"; 
     Systhesissystem system( systemname,false);
     try{
