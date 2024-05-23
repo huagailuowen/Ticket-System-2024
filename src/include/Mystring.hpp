@@ -8,7 +8,7 @@ public:
 #endif
   unsigned long long myhash = 0;
   char c[len + 1];
-  int l = 0;
+  short l = 0;
 
 public:
   Mystring();

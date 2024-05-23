@@ -171,13 +171,13 @@ std::ostream &  operator <<  (std::ostream &os, const Train &train)
 class Smalltrain{
     public:
     TrainID_type trainID;
-    int saleDate[2];
     char type;
-    int stationindex;
+    short saleDate[2];
+    short stopoverTime;
+    short stationindex;
     int price;
     //the total price when reach this station
     Mydate cur_date;
-    Mydate stopoverTime;
     Mydate start_date;
     //leave time of the station
     public:
@@ -263,7 +263,7 @@ class Smalltrain{
     int getPrice() const { return price; }
     Mydate getleavetime() const { return cur_date; }
     Mydate getStopoverTime() const { return stopoverTime; }
-    Mydate getarrivetime() const { return cur_date-stopoverTime; }
+    Mydate getarrivetime() const { return cur_date-Mydate(0,stopoverTime); }
     
     Mydate getStartTime() const { return start_date; }
     
