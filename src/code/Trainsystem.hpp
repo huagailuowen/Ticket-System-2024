@@ -16,16 +16,16 @@ protected:
 public:
 #endif
     TrainID_type trainID;
-    int stationNum;
+    char type;
     Stationname_type station[MAXSTATIONNUM];
+    int stationNum;
     int seatNum;
     int price[MAXSTATIONNUM];
-    int startTime;
     // int travelTime[MAXSTATIONNUM];
     short stopoverTime[MAXSTATIONNUM];
+    int startTime;
     Mydate arrivetime[MAXSTATIONNUM];
     int saleDate[2];
-    char type;
 public:
     Train() = default;
     Train(const TrainID_type &trainID, int stationNum, const Stationname_type *station, int seatNum, const int *price, int startTime, const int *travelTime, const int *stopoverTime, const int *saleDate, char type)

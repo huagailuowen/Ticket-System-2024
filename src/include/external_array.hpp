@@ -96,6 +96,7 @@ class external_array {
 
         if(repos+sizeof(T)>=cfg.filesize){
             file.seekp(0,std::ios::end);
+            cfg.filesize=file.tellp();
             char buffer[incrsize];
             while(repos+sizeof(T)>=cfg.filesize){
                 file.write(buffer,incrsize);
@@ -116,7 +117,7 @@ class external_array {
         size_t repos=sizeof(config)+pos*sizeof(T)+offset1;
         if(repos+len>=cfg.filesize){
             file.seekp(0,std::ios::end);
-            
+            cfg.filesize=file.tellp();
             // assert(file.tellp()==cfg.filesize);
             char buffer[incrsize];
             while(repos+len>=cfg.filesize){
@@ -139,6 +140,7 @@ class external_array {
         // std::cerr<<file.tellp()<<"||"<<std::endl;
         if(repos+sizeof(T)>=cfg.filesize){
             file.seekp(0,std::ios::end);
+            cfg.filesize=file.tellp();
             // assert(file.tellp()==cfg.filesize);
             char buffer[incrsize];
             while(repos+sizeof(T)>=cfg.filesize){
@@ -160,6 +162,7 @@ class external_array {
         }
         if(repos+len>=cfg.filesize){
             file.seekp(0,std::ios::end);
+            cfg.filesize=file.tellp();
             char buffer[incrsize];
             while(repos+len>=cfg.filesize){
                 file.write(buffer,incrsize);
