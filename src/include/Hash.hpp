@@ -6,7 +6,7 @@
 
 namespace Hash {
 
-    using hash_t = unsigned long long;
+    using hash_t = unsigned int;
 
     // Forward declaration
     hash_t Hash(const int &x);
