@@ -42,7 +42,7 @@ public:
 
 class Usersystem {
   // sjtu::BPlusTree<UserName_type,User,200,40>UserInfo;
-  sjtu::external_bpt<UserName_type,User>UserInfo;
+  sjtu::external_bpt<UserName_type,User,true>UserInfo;
 public:
   Usersystem() = delete;
   Usersystem(const Usersystem &usersystem) = delete;

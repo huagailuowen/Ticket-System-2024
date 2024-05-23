@@ -132,7 +132,7 @@ class release_bpt{
     release_bpt()=delete;
     release_bpt(const release_bpt &release_bpt)=delete;
     release_bpt &operator=(const release_bpt &release_bpt)=delete;
-    sjtu::external_bpt<TrainID_type,release_block> data;
+    sjtu::external_bpt<TrainID_type,release_block,true> data;
     public:
     release_block buffer;
     release_bpt(std::string name,bool isnew=false):data(name,isnew),BEGIN_DATE(153,0){}
@@ -202,7 +202,7 @@ public:
     sjtu::BPlusTree<sjtu::pair<sjtu::pair<TrainID_type,int>,sjtu::pair<UserName_type,int>>, Ticket,80,40>ticket_queue;
     // sjtu::external_bpt<sjtu::pair<sjtu::pair<TrainID_type,int>,sjtu::pair<UserName_type,int>>, Ticket>ticket_queue;
     // sjtu::BPlusTree<UserName_type,int,80,400>order_num;
-    sjtu::external_map<UserName_type,int>order_num;
+    sjtu::external_bpt<UserName_type,int,true>order_num;
     Trainsystem trainsystem;
 public:
     Ticketsystem()=delete;
