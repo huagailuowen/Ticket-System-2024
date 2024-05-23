@@ -228,9 +228,9 @@ public:
     std::string treefile;
     std::fstream file;
     config Config;
-    static const int buffersize=100;
+    static const int buffersize=70;
     innerTreeNode treebuffer[buffersize];
-    dataNode databuffer[buffersize/2];
+    dataNode databuffer[buffersize];
     sjtu::priority_queue<sjtu::pair<int,int>>treebufferqueue;
     sjtu::priority_queue<sjtu::pair<int,int>>databufferqueue;
     sjtu::priority_queue<sjtu::pair<int,int>>treevacantqueue;
