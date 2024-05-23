@@ -15,10 +15,10 @@ class Ticket{
     Stationname_type startstation;
     Stationname_type endstation;
     int startstation_date;
-    int timestamp;
-    int order_num;
     Mydate leavetime;
     Mydate arrivetime;
+    int timestamp;
+    int order_num;
     int price;
     int seatnum;
 public:
@@ -142,7 +142,7 @@ class release_bpt{
         if(begin_index<0||end_index>91||begin_date>end_date) throw TrainSystemError("Invalid date");
         release_block block;
         ReleasedTrain released_train;
-        released_train.setTrainID(train.getTrainID());
+        // released_train.setTrainID(train.getTrainID());
         released_train.setStationNum(train.getStationNum());
         for(int j=0;j<(int)train.getStationNum()-1;j++){
             released_train.setSeat(j,train.getSeatNum());
@@ -159,9 +159,11 @@ class release_bpt{
         // bool res=data.search(key.first,buffer);
         // std::cerr<<"----------------------\n";
         // std::cerr<<(&buffer)<<std::endl;
+        buffer[index].setDate(0);
         bool res=data.search(key.first,buffer,index*sizeof(ReleasedTrain),index*sizeof(ReleasedTrain),sizeof(ReleasedTrain));
         if(res==false) return false;
-        if(buffer[index].getTrainID()!=key.first) return false;
+        // if(buffer[index].getTrainID()!=key.first) return false;
+        if(buffer[index].getDate()!=key.second) return false;
         if(buffer[index].getDate()!=key.second) return false;
         released_train=buffer[index];
         
@@ -260,7 +262,7 @@ public:
             res=trainsystem.find_train(trainID,train,2);
             if(res==false) return false;
             if(date<train.getSaleDate(0)||date>train.getSaleDate(1)) return false;
-            released_train.setTrainID(trainID);
+            // released_train.setTrainID(trainID);
             released_train.setStationNum(train.getStationNum());
             for(int i=0;i<(int)train.getStationNum()-1;i++){
                 //there must minus one because the last station is the terminal station
@@ -338,7 +340,7 @@ public:
                 daydate=train.getSaleDate(0);
             bool res=released_train_info.search(sjtu::make_pair(train.getTrainID(),daydate),released_train);
             if(res==false) throw TrainSystemError("Impossible Invalid train");
-            if(released_train.getTrainID()!=train.getTrainID()) throw TrainSystemError("Impossible Invalid train");
+            // if(released_train.getTrainID()!=train.getTrainID()) throw TrainSystemError("Impossible Invalid train");
             // if(TIME==379506&&train.getTrainID()==TrainID_type("aparadoxappearsth")
             // &&station==Stationname_type("北京市")) {
             //     std::cerr<<":::::::::::::::::::::::::::::::::::\n";

@@ -16,13 +16,13 @@ protected:
 public:
 #endif
     TrainID_type trainID;
+    short stopoverTime[MAXSTATIONNUM];
     char type;
-    Stationname_type station[MAXSTATIONNUM];
     int stationNum;
+    Stationname_type station[MAXSTATIONNUM];
     int seatNum;
     int price[MAXSTATIONNUM];
     // int travelTime[MAXSTATIONNUM];
-    short stopoverTime[MAXSTATIONNUM];
     int startTime;
     Mydate arrivetime[MAXSTATIONNUM];
     int saleDate[2];
@@ -286,20 +286,22 @@ class ReleasedTrain {
 #ifdef DEBUG
 public:
 #endif
-    TrainID_type trainID;
+    // TrainID_type trainID;
     int Date;
     int stationNum;
     int seat[MAXSTATIONNUM];
 public:
-    ReleasedTrain() = default;
+    ReleasedTrain() {
+        Date=-1;
+    }
     ReleasedTrain(const TrainID_type &trainID, int Date, int stationNum, const int *seat)
-        : trainID(trainID), Date(Date), stationNum(stationNum) {
+        : Date(Date), stationNum(stationNum) {
         for (int i = 0; i < stationNum; i++) {
             this->seat[i] = seat[i];
         }
     }
     ReleasedTrain(const ReleasedTrain &releasedTrain) {
-        trainID = releasedTrain.trainID;
+        // trainID = releasedTrain.trainID;
         Date = releasedTrain.Date;
         stationNum = releasedTrain.stationNum;
         for (int i = 0; i < stationNum; i++) {
@@ -310,7 +312,7 @@ public:
         if (this == &releasedTrain) {
             return *this;
         }
-        trainID = releasedTrain.trainID;
+        // trainID = releasedTrain.trainID;
         Date = releasedTrain.Date;
         stationNum = releasedTrain.stationNum;
         for (int i = 0; i < stationNum; i++) {
@@ -318,15 +320,15 @@ public:
         }
         return *this;
     }
-    TrainID_type getTrainID() const { return trainID; }
+    // TrainID_type getTrainID() const { return trainID; }
     int getDate() const { return Date; }
     int getSeat(int i) const { return seat[i]; }
     int getStationNum() const { return stationNum; }
-    TrainID_type& getTrainID() { return trainID; }
+    // TrainID_type& getTrainID() { return trainID; }
     int& getDate() { return Date; }
     int& getSeat(int i) { return seat[i]; }
     int& getStationNum() { return stationNum; }
-    void setTrainID(const TrainID_type &trainID) { this->trainID = trainID; }
+    // void setTrainID(const TrainID_type &trainID) { this->trainID = trainID; }
     void setDate(int Date) { this->Date = Date; }
     void setSeat(int i, int seat) { this->seat[i] = seat; }
     void setStationNum(int stationNum) { this->stationNum = stationNum; }
@@ -334,7 +336,7 @@ public:
 };
 std::ostream &  operator <<  (std::ostream &os, const ReleasedTrain &releasedTrain)
 {
-    os<<releasedTrain.getTrainID()<<" "<<int_to_Date(releasedTrain.getDate())<<" "<<releasedTrain.getStationNum()<<"\n";
+    os<<" "<<int_to_Date(releasedTrain.getDate())<<" "<<releasedTrain.getStationNum()<<"\n";
     for(int i=0;i<releasedTrain.getStationNum();i++)
     {
         os<<releasedTrain.getSeat(i)<<" ";
