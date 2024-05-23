@@ -230,7 +230,7 @@ public:
     config Config;
     static const int buffersize=100;
     innerTreeNode treebuffer[buffersize];
-    dataNode databuffer[buffersize];
+    dataNode databuffer[buffersize/2];
     sjtu::priority_queue<sjtu::pair<int,int>>treebufferqueue;
     sjtu::priority_queue<sjtu::pair<int,int>>databufferqueue;
     sjtu::priority_queue<sjtu::pair<int,int>>treevacantqueue;
