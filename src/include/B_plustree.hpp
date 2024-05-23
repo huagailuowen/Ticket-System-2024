@@ -1,6 +1,6 @@
 #ifndef BPLUSTREE_HPP
 #define BPLUSTREE_HPP
-#define FAST
+// #define FAST
 #ifdef FAST
 #include<map>
 #include"vector.hpp"
@@ -228,7 +228,7 @@ public:
     std::string treefile;
     std::fstream file;
     config Config;
-    static const int buffersize=10;
+    static const int buffersize=100;
     innerTreeNode treebuffer[buffersize];
     dataNode databuffer[buffersize];
     sjtu::priority_queue<sjtu::pair<int,int>>treebufferqueue;

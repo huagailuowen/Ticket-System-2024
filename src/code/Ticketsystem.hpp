@@ -194,12 +194,13 @@ public:
 #endif
     // sjtu::BPlusTree<sjtu::pair<TrainID_type,int >, ReleasedTrain,200,8>released_train_info;
     sjtu::release_bpt released_train_info;
-    // sjtu::BPlusTree<sjtu::pair<UserName_type,int>,Ticket,40,40> UserTicket;
-    sjtu::external_bpt<sjtu::pair<UserName_type,int>,Ticket>UserTicket;
+    sjtu::BPlusTree<sjtu::pair<UserName_type,int>,Ticket,200,40> UserTicket;
+    // sjtu::external_bpt<sjtu::pair<UserName_type,int>,Ticket>UserTicket;
+
     //用户可以在同一时间下单吗？？？
     //int 代表时间
-    // sjtu::BPlusTree<sjtu::pair<sjtu::pair<TrainID_type,int>,sjtu::pair<UserName_type,int>>, Ticket,80,40>ticket_queue;
-    sjtu::external_bpt<sjtu::pair<sjtu::pair<TrainID_type,int>,sjtu::pair<UserName_type,int>>, Ticket>ticket_queue;
+    sjtu::BPlusTree<sjtu::pair<sjtu::pair<TrainID_type,int>,sjtu::pair<UserName_type,int>>, Ticket,80,40>ticket_queue;
+    // sjtu::external_bpt<sjtu::pair<sjtu::pair<TrainID_type,int>,sjtu::pair<UserName_type,int>>, Ticket>ticket_queue;
     // sjtu::BPlusTree<UserName_type,int,80,400>order_num;
     sjtu::external_map<UserName_type,int>order_num;
     Trainsystem trainsystem;

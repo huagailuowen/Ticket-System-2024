@@ -342,9 +342,9 @@ std::ostream &  operator <<  (std::ostream &os, const ReleasedTrain &releasedTra
     return os;
 }
 class Trainsystem {
-    sjtu::BPlusTree<TrainID_type, Train,  200,4>released_train,unreleased_train;
+    sjtu::external_bpt<TrainID_type, Train>released_train,unreleased_train;
     // sjtu::external_bpt<TrainID_type,Train,true>released_train,unreleased_train;
-    sjtu::BPlusTree<sjtu::pair<Stationname_type, TrainID_type>, Smalltrain, 80,4>  station_train;
+    sjtu::BPlusTree<sjtu::pair<Stationname_type, TrainID_type>, Smalltrain, 80,80>  station_train;
 
 public:
     Trainsystem ()=delete;
