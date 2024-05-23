@@ -282,36 +282,46 @@ public:
         ticket_queue.clear();
         order_num.clear();
     }
-    void getalltrain_bystation(const Stationname_type &station,sjtu::vector<Train> &trains){
-        trainsystem.getalltrain_bystation(station,trains);
+    void getallsmalltrain_bystation(const Stationname_type &station,sjtu::vector<Smalltrain> &trains){
+        trainsystem.getallsmalltrain_bystation(station,trains);
     }
+    void getalltrain_bystation(const Stationname_type &station,sjtu::vector<Train> &trains){
+        sjtu::vector<Smalltrain> smalltrains;
+        getallsmalltrain_bystation(station,smalltrains);
+        trains.resize(smalltrains.size());
+        for(int i=0;i<(int)smalltrains.size();i++){
+            query_train(smalltrains[i].getTrainID(),trains[i]);
+        }
+    }
+    
     //根据寻址连续性，这种方式实际上是比较快的，因为选中的trainid也是升序排列的？
     //但是还有更快的方法？，就是在station中直接放releasedtrain，这样就不用再次查询了
     //这两种方法哪个更快？？
     //我先写第一种吧
-    bool getreleasedtrain_bytrain(const Train& train,const Stationname_type&station,const Mydate &date,ReleasedTrain& released_train,bool havetobethatday=true){
+    bool getreleasedtrain_bysmalltrain(const Smalltrain& train,const Stationname_type&station,const Mydate &date,ReleasedTrain& released_train,bool havetobethatday=true){
         //这一出有关一些Transfer的事项好没有搞清楚，以后还得再返工
         //had fixed
         //这里有一个问题，就是如果这个车次在这一天没有开，那么就会出现问题
         int station_index=-1;
-        for(int j=0;j<train.getStationNum();j++){
-            if(station==train.getStation(j)){
-                station_index=j;
-                break;
-            }
-        }
-        if(station_index==-1||station_index+1==train.getStationNum()) return false;
+        // for(int j=0;j<train.getStationNum();j++){
+        //     if(station==train.getStation(j)){
+        //         station_index=j;
+        //         break;
+        //     }
+        // }
+        station_index=train.getStationindex();
+        // if(station_index==-1||station_index+1==train.getStationindex()) return false;
         //不走终点站
         if(havetobethatday==true){
             //不是换车的情况，date.time()==0
             if(date.time()!=0)throw   TrainSystemError("Invalid date,not transfering");
             //这里不是arrivetime，而是leavetime吧？？
-            Mydate tmp=train.getleavetime(station_index);
+            Mydate tmp=train.getleavetime();
             int takedays=tmp.day();
             if(date.day()-takedays<train.getSaleDate(0)||date.day()-takedays>train.getSaleDate(1)) return false;
             return released_train_info.search(sjtu::make_pair(train.getTrainID(),date.day()-takedays),released_train);
         }else{
-            Mydate curstartdate=date-(train.getleavetime(station_index)-train.getleavetime(0));
+            Mydate curstartdate=date-(train.getleavetime()-train.getStartTime());
             //始发时间>=curstartdate
             int daydate=curstartdate.day();
             if(curstartdate.time()>train.getStartTime()) daydate++;
@@ -339,15 +349,15 @@ public:
         }
     
     }
-    void getalltrain_bystation_time(const Stationname_type &station,const Mydate &date,sjtu::vector<sjtu::pair<Train,ReleasedTrain>> &trains,bool havetobethatday=true,bool is_debug=false){
-        sjtu::vector<Train> possible_train;
+    void getallsmalltrain_bystation_time(const Stationname_type &station,const Mydate &date,sjtu::vector<sjtu::pair<Smalltrain,ReleasedTrain>> &trains,bool havetobethatday=true,bool is_debug=false){
+        sjtu::vector<Smalltrain> possible_train;
         trains.clear();
-        getalltrain_bystation(station,possible_train);
+        getallsmalltrain_bystation(station,possible_train);
         ReleasedTrain released_train;
         for(auto &i:possible_train){
             //&加速
             //可以不用get函数调用来加速
-            if(getreleasedtrain_bytrain(i,station,date,released_train,havetobethatday)==false) 
+            if(getreleasedtrain_bysmalltrain(i,station,date,released_train,havetobethatday)==false) 
                 continue;
             trains.push_back(sjtu::make_pair(i,released_train));
             // if(is_debug&&TIME==379506&&trains.back().first.getTrainID()==TrainID_type("aparadoxappearsth")
@@ -367,6 +377,15 @@ public:
         //     std::cerr<<trains.size()<<std::endl;
         //     std::cerr<<"#############################\n";
         // }
+    }
+    void getallTrain_bystation_time(const Stationname_type &station,const Mydate &date,sjtu::vector<sjtu::pair<Train,ReleasedTrain>> &trains,bool havetobethatday=true){
+        sjtu::vector<sjtu::pair<Smalltrain,ReleasedTrain>> smalltrains;
+        getallsmalltrain_bystation_time(station,date,smalltrains,havetobethatday);
+        trains.resize(smalltrains.size());
+        for(int i=0;i<(int)smalltrains.size();i++){
+            query_train(smalltrains[i].first.getTrainID(),trains[i].first);
+            getreleasedtrain_bysmalltrain(smalltrains[i].first,station,date,trains[i].second,havetobethatday);
+        }
     }
     bool buy_ticket(const TrainID_type& trainID,const Stationname_type& startstation,const Stationname_type& endstation,const Train&train,ReleasedTrain released_train,const UserName_type& user_name,const int price,const int& num,const int& timestamp){
         int start_station_num=-1;

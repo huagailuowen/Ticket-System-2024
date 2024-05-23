@@ -116,6 +116,7 @@ public:
     Mydate getleavetime(int i) const
     {
         if(i>=stationNum)throw "error";
+        // stationNum-1 is also useless
         Mydate tmp = arrivetime[i];
         if(i!=0)tmp = tmp + Mydate(0,stopoverTime[i-1]);
         return tmp;
@@ -167,13 +168,120 @@ std::ostream &  operator <<  (std::ostream &os, const Train &train)
     os<<train.getSaleDate(0)<<" "<<train.getSaleDate(1)<<" "<<train.getType();
     return os;
 }
-class smalltrain{
-    unsigned int trainIDhash;
-    Mydate saleDate[2];
+class Smalltrain{
+    public:
+    TrainID_type trainID;
+    int saleDate[2];
     char type;
-    int stationNum;
-    int price[MAXSTATIONNUM];
+    int stationindex;
+    int price;
+    //the total price when reach this station
+    Mydate cur_date;
+    Mydate stopoverTime;
+    Mydate start_date;
+    //leave time of the station
+    public:
+    Smalltrain()=default;
+    Smalltrain(const Train &train,const Stationname_type &station)
+    {
+        trainID=train.getTrainID();
+        saleDate[0]=train.getSaleDate(0);
+        saleDate[1]=train.getSaleDate(1);
+        type=train.getType();
+        start_date=Mydate(0,train.getStartTime());
+        price=0;
+        for(int i=0;i<train.getStationNum();i++)
+        {
+            if(train.getStation(i)==station)
+            {
+                cur_date=train.getleavetime(i);
+                stationindex=i;
+                if(i+1==train.getStationNum())
+                    stopoverTime=Mydate(0,0);
+                else 
+                    stopoverTime=Mydate(0,train.getStopoverTime(i-1));
+                break;
+            }
+            price+=train.getPrice(i-1);
+        }
+    }
+    Smalltrain(const Train &train,int index)
+    {
+        trainID=train.getTrainID();
+        saleDate[0]=train.getSaleDate(0);
+        saleDate[1]=train.getSaleDate(1);
+        type=train.getType();
+        start_date=Mydate(0,train.getStartTime());
+        price=0;
+        for(int i=0;i<train.getStationNum();i++)
+        {
+            if(i==index)
+            {
+                cur_date=train.getleavetime(i);
+                stationindex=i;
+                if(i+1==train.getStationNum())
+                    stopoverTime=Mydate(0,0);
+                else 
+                    stopoverTime=Mydate(0,train.getStopoverTime(i-1));
+                break;
+            }
+            price+=train.getPrice(i-1);
+        }
+    }
+    
+   
+    Smalltrain(const Smalltrain &other)
+    {
+        trainID=other.trainID;
+        saleDate[0]=other.saleDate[0];
+        saleDate[1]=other.saleDate[1];
+        start_date=other.start_date;
+        stopoverTime=other.stopoverTime;
+        type=other.type;
+        stationindex=other.stationindex;
+        price=other.price;
+        cur_date=other.cur_date;
+    }
+    Smalltrain& operator=(const Smalltrain &other)
+    {
+        if(this==&other)return *this;
+        trainID=other.trainID;
+        saleDate[0]=other.saleDate[0];
+        saleDate[1]=other.saleDate[1];
+        start_date=other.start_date;
+        stopoverTime=other.stopoverTime;
+        type=other.type;
+        stationindex=other.stationindex;
+        price=other.price;
+        cur_date=other.cur_date;
+        return *this;
+    }
+    TrainID_type getTrainID() const { return trainID; }
+    int getSaleDate(int i) const { return saleDate[i]; }
+    char getType() const { return type; }
+    int getStationindex() const { return stationindex; }
+    int getPrice() const { return price; }
+    Mydate getleavetime() const { return cur_date; }
+    Mydate getStopoverTime() const { return stopoverTime; }
+    Mydate getarrivetime() const { return cur_date-stopoverTime; }
+    
+    Mydate getStartTime() const { return start_date; }
+    
+    void setTrainID(const TrainID_type &trainID) { this->trainID = trainID; }
+    void setSaleDate(int i, int saleDate) { this->saleDate[i] = saleDate; }
+    void setType(char type) { this->type = type; }
+    void setStationindex(int stationNum) { this->stationindex = stationindex; }
+    void setPrice(int price) { this->price = price; }
+    void setcur_date(Mydate cur_date) { this->cur_date = cur_date; }
+    void setStopoverTime(Mydate stopoverTime) { this->stopoverTime = stopoverTime; }
+    void setStartTime(Mydate start_date) { this->start_date = start_date; }
+    friend std::ostream & operator <<  (std::ostream &os, const Smalltrain &train);
 };
+std::ostream &  operator <<  (std::ostream &os, const Smalltrain &train)
+{
+    os<<train.getTrainID()<<" "<<int_to_Date(train.getSaleDate(0))<<" "<<int_to_Date(train.getSaleDate(1))<<" "<<train.getType()<<" "<<train.getStationindex()<<" "<<train.getPrice();
+    return os;
+}
 class ReleasedTrain {
 #ifdef DEBUG
 public:
@@ -236,7 +344,7 @@ std::ostream &  operator <<  (std::ostream &os, const ReleasedTrain &releasedTra
 class Trainsystem {
     sjtu::BPlusTree<TrainID_type, Train,  200,4>released_train,unreleased_train;
     // sjtu::external_bpt<TrainID_type,Train,true>released_train,unreleased_train;
-    sjtu::BPlusTree<sjtu::pair<Stationname_type, TrainID_type>, Train, 80,4>  station_train;
+    sjtu::BPlusTree<sjtu::pair<Stationname_type, TrainID_type>, Smalltrain, 80,4>  station_train;
 
 public:
     Trainsystem ()=delete;
@@ -272,7 +380,7 @@ public:
         Train train;
         if(!unreleased_train.search(trainID,train)) return false;
         for(int i=0;i<train.getStationNum();i++){
-            station_train.insert(sjtu::make_pair(train.getStation(i),train.getTrainID()),train);
+            station_train.insert(sjtu::make_pair(train.getStation(i),train.getTrainID()),Smalltrain(train,i));
         }
         unreleased_train.remove(trainID);
         released_train.insert(trainID,train);
@@ -284,9 +392,18 @@ public:
         unreleased_train.clear();
         station_train.clear();
     }
-    void getalltrain_bystation(const Stationname_type &station,sjtu::vector<Train> &trains){
+    void getallsmalltrain_bystation(const Stationname_type &station,sjtu::vector<Smalltrain> &trains){
         trains.clear();
         station_train.searchall(sjtu::make_pair(station,TrainID_type::setmin()),sjtu::make_pair(station,TrainID_type::setmax()),trains);
+    }
+    void gettrainbysmalltrain(const Smalltrain &smalltrain,Train &train){
+        released_train.search(smalltrain.getTrainID(),train);
+    }
+    void getalltrainbysmalltrain(const sjtu::vector<Smalltrain> &smalltrains,sjtu::vector<Train> &trains){
+        trains.resize(smalltrains.size());
+        for(int i=0;i<smalltrains.size();i++){
+            released_train.search(smalltrains[i].getTrainID(),trains[i]);
+        }
     }
 };
 
