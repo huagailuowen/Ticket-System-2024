@@ -196,13 +196,13 @@ class Smalltrain{
             {
                 cur_date=train.getleavetime(i);
                 stationindex=i;
-                if(i+1==train.getStationNum())
+                if(i+1==train.getStationNum()||!i)
                     stopoverTime=Mydate(0,0);
                 else 
                     stopoverTime=Mydate(0,train.getStopoverTime(i-1));
                 break;
             }
-            price+=train.getPrice(i-1);
+            price+=train.getPrice(i);
         }
     }
     Smalltrain(const Train &train,int index)
@@ -219,13 +219,13 @@ class Smalltrain{
             {
                 cur_date=train.getleavetime(i);
                 stationindex=i;
-                if(i+1==train.getStationNum())
+                if(i+1==train.getStationNum()||!i)
                     stopoverTime=Mydate(0,0);
                 else 
                     stopoverTime=Mydate(0,train.getStopoverTime(i-1));
                 break;
             }
-            price+=train.getPrice(i-1);
+            price+=train.getPrice(i);
         }
     }
     

@@ -1,6 +1,7 @@
 #ifndef SYSTHESSISSYSTEM_HPP
 #define SYSTHESSISSYSTEM_HPP
 #include <cassert>
+#include <cstdio>
 #include <iostream>
 // #include <iterator>
 #include <ostream>
@@ -14,7 +15,12 @@
 #include "Usersystem.hpp"
 #include "mytype.hpp"
 #include"../include/map.hpp"
+#include"../include/timer.hpp"
 int TIME=0;
+Timer timer_qt("q_ticket_t");
+Timer timer_trans("q_tans_t");
+Timer timer_bt("b_ticket_t");
+
 class Systhesissystem{
 private:
 #ifdef DEBUG
@@ -32,7 +38,7 @@ public:
     Systhesissystem(std::string name,bool isnew=false):commandsystem(),ticketsystem(name+"ticketsystem",isnew),usersystem(name+"usersystem",isnew){
         Userlist.clear();
     }
-    void query_smalltrain(const Stationname_type &start_station,const Stationname_type &end_station,sjtu::vector<sjtu::pair<Smalltrain,Smalltrain>>trains);
+    void query_smalltrain(const Stationname_type &start_station,const Stationname_type &end_station,sjtu::vector<sjtu::pair<Smalltrain,Smalltrain>>&trains);
     int add_user(const Command &command,std::ostream &os);
     int login(const Command &command,std::ostream &os);
     int logout(const Command &command,std::ostream &os);
@@ -512,7 +518,6 @@ bool calculate_ticket(const sjtu::pair<Train,ReleasedTrain> &train,const int &st
 }
 bool calculate_ticket(const sjtu::pair<sjtu::pair<Smalltrain,Smalltrain>,ReleasedTrain> &train,const Stationname_type &start_station,const Stationname_type &end_station,Train_sort &train_sort,bool can_no_seat=true){
     //there is no day in arrivetime
-
     // if(start_station_num==-1||end_station_num==-1)
     //     return false;
     // if(start_station_num>=end_station_num)
@@ -537,7 +542,7 @@ bool calculate_ticket(const sjtu::pair<sjtu::pair<Smalltrain,Smalltrain>,Release
     return true;
 
 }
-void Systhesissystem::query_smalltrain(const Stationname_type &start_station,const Stationname_type &end_station,sjtu::vector<sjtu::pair<Smalltrain,Smalltrain>>trains)
+void Systhesissystem::query_smalltrain(const Stationname_type &start_station,const Stationname_type &end_station,sjtu::vector<sjtu::pair<Smalltrain,Smalltrain>>&trains)
 {
     trains.clear();
     sjtu::vector<Smalltrain>bg,ed;
@@ -595,7 +600,7 @@ int Systhesissystem::query_ticket(const Command &command,std::ostream &os){
 
     // sjtu::vector<sjtu::pair<Train,ReleasedTrain>>possible_train;
     sjtu::vector<sjtu::pair<Smalltrain, Smalltrain>>possible_train;
-
+    
     sjtu::vector<Train_sort>possible_train_sort;
     //根据寻址连续性，这种方式实际上是比较快的，因为选中的trainid也是升序排列的？
     //但是还有更快的方法？，就是在station中直接放releasedtrain，这样就不用再次查询了
@@ -604,9 +609,15 @@ int Systhesissystem::query_ticket(const Command &command,std::ostream &os){
     Train_sort train_sort;
     // ticketsystem.getalltrain_bystation_time(start_station,Mydate(date_day,0),possible_train,true);
     query_smalltrain(start_station,end_station,possible_train);
+    
     for(auto &i:possible_train){
+        
         ReleasedTrain released_train;
-        ticketsystem.getreleasedtrain_bysmalltrain(i.first,start_station,Mydate(date_day,0),released_train);
+        bool res=ticketsystem.getreleasedtrain_bysmalltrain(i.first,start_station,Mydate(date_day,0),released_train);
+        if(!res)continue;
+        if(TIME==7197){
+            std::cerr<<i.first.getTrainID()<<std::endl;
+        }
         if(calculate_ticket(sjtu::make_pair(i,released_train),start_station,end_station,train_sort)){
             possible_train_sort.push_back(train_sort);
         }
@@ -787,31 +798,11 @@ int Systhesissystem::query_transfer(const Command &command,std::ostream &os){
                         // }
                     // std::vector<sjtu::pair<Train,ReleasedTrain>>possible_train2;
                     Mydate transfer_time=train_sort.getArrivingTime();
-                    // bool is_debug=false;
-                    // if(TIME==379506){
-                    //     if(i.first.getTrainID()==TrainID_type("INCABINDSHIPSAT")&&i.first.getStation(k)==Stationname_type("北京市")){
-                    //         is_debug=true;
-                    //     }
-                    // }
-                    //ticketsystem.getalltrain_bystation_time(i.first.getStation(k),transfer_time,possible_train2,false);
                     
                     query_smalltrain(transfer_station,end_station,possible_train2);
-                    // if(is_debug){
-                    //     std::cerr<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1\n";
-                    //     std::cerr<<possible_train2.size()<<std::endl;
-                    // }
+                    
                     Train_sort train_sort2;
-                    // if(TIME==379506){
-                    //     if(i.first.getTrainID()==TrainID_type("INCABINDSHIPSAT")&&i.first.getStation(k)==Stationname_type("北京市")){
-                    //         Train train;
-                    //         ReleasedTrain released_train;
-                    //         ticketsystem.query_train(TrainID_type("aparadoxappearsth"),i.second.getDate(),train,released_train);
-                    //         std::cerr<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1\n";
-                    //         std::cerr<<transfer_time<<std::endl;
-                    //         std::cerr<<train<<std::endl;
-                    //     }
-                    // }
-                    // int cnt=0;
+                   
                     for(auto &ii:possible_train2){
                         
                         // cnt++;
@@ -823,9 +814,13 @@ int Systhesissystem::query_transfer(const Command &command,std::ostream &os){
                         ReleasedTrain released_train;
                         if(ii.first.getTrainID()==i.first.getTrainID())
                             continue;
-                        ticketsystem.getreleasedtrain_bysmalltrain(ii.first,transfer_station,transfer_time,released_train,false);
+
+                        res=ticketsystem.getreleasedtrain_bysmalltrain(ii.first,transfer_station,transfer_time,released_train,false);
+                        if(!res)
+                            continue;
                         if(!calculate_ticket(sjtu::make_pair(ii,released_train),transfer_station,end_station,train_sort2,true))
                             continue;
+                        
                         
                         checkmin(train_sort,train_sort2);
                         // break;   fuck  FUUUUUCKKKKKKK
@@ -925,8 +920,23 @@ int Systhesissystem::buy_ticket(const Command &command,std::ostream &os){
     res=ticketsystem.query_train(trainID,train);
     if(res==false)
         return os<<"-1"<<std::endl,-1;
-
-    res=ticketsystem.getreleasedtrain_bysmalltrain(Smalltrain(train,start_station),start_station,Mydate(date_day,0),released_train,true);
+    int start_station_num=-1,end_station_num=-1;
+    for(int i=0;i<train.getStationNum();i++){
+        if(train.getStation(i)==start_station){
+            start_station_num=i;
+        }
+        if(train.getStation(i)==end_station){
+            end_station_num=i;
+        }
+    }
+    if(start_station_num==-1||end_station_num==-1)
+        return os<<"-1"<<std::endl,-1;
+    res=ticketsystem.getreleasedtrain_bysmalltrain(Smalltrain(train,start_station_num),start_station,Mydate(date_day,0),released_train,true);
+    // if(TIME==100427){
+    //     std::cerr<<res<<std::endl;
+    //     std::cerr<<released_train<<std::endl;
+    //     std::cerr<<"------------------------------------\n";
+    // }
     if(res==false)
         return os<<"-1"<<std::endl,-1;
     Train_sort train_sort;
@@ -1110,14 +1120,21 @@ void Systhesissystem::process()
             break;
         case command_type::query_ticket:
             // std::stringstream os;
+            timer_qt.start();
             res=query_ticket(cmd,os);
+            timer_qt.stop();
             break;
         case command_type::query_transfer:
             // std::ostringstream os;
+            timer_trans.start();
+        
             res=query_transfer(cmd,os);
+            timer_trans.stop();
             break;  
         case command_type::buy_ticket:
+            timer_bt.start();
             res=buy_ticket(cmd,     os);
+            timer_bt.stop();
             break;  
         case command_type::query_order:
             // std::ostringstream os;

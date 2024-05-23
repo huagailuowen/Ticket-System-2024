@@ -1,6 +1,7 @@
 // #define DEBUG
 // #define FAST
 #include "Ticketsystem.hpp"
+#include"../include/timer.hpp"
 #include<string>
 int status=0;
 std::string BUFFER="[0] query_train -d 06-28 -i LeavesofGrass";
@@ -8,6 +9,7 @@ std::string BUFFER="[0] query_train -d 06-28 -i LeavesofGrass";
 #include "mytype.hpp"
 #include <cstdio>
 extern int TIME;
+
 int main() {
     // freopen("test.in","r",stdin);
     // freopen("testmy.out","w",stdout);

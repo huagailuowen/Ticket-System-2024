@@ -3,7 +3,7 @@ rm -r coding
 mkdir coding
 # cd coding
 # g++ -g -std=c++20 -o0 ./src/code/main.cpp -o maincoding -W -fsanitize=address -fsanitize=undefined 
-g++ -g -std=c++20 -o2 ./src/code/main.cpp -o maincoding 
+g++ -g -std=c++20 -o2 -W ./src/code/main.cpp -o maincoding
 # cd ..
 
 if [ ! -e testcases/config.json ]; then
